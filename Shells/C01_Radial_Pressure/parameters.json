@@ -9,16 +9,14 @@
   "reference_pressure_MPa": 0.001,
   "num_modes": 6,
   "mesh_sizes_m": [
-    0.64,
-    0.32,
-    0.16,
-    0.08,
-    0.06,
-    0.04,
-    0.03
+    0.15,
+    0.1,
+    0.05,
+    0.025,
+    0.0125
   ],
   "resources": {
-    "ncpus": 1,
+    "ncpus": 4,
     "mpi_nbcpu": 1,
     "memory_limit_MB": 2048,
     "time_limit_s": 3600
