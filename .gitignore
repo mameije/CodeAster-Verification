@@ -14,3 +14,7 @@ __pycache__/
 /archive/
 /registry/runs.csv
 /registry/runs.csv.tmp
+
+# Generated one-row-per-run navigation table
+/registry/run_summary.csv
+/registry/run_summary.csv.tmp
