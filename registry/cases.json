@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "C01",
+      "family": "Shells",
+      "path": "Shells/C01_Radial_Pressure",
+      "title": "Uniform non-follower radial pressure",
+      "analyses": ["LA", "LBA"],
+      "status": "Benchmarked",
+      "reference_source": "Brush and Almroth (1975), Chapter 5, section 5.5a; Donnell approximation",
+      "primary_reference": {"quantity": "critical_pressure", "value": 730.84, "unit": "kPa"},
+      "result_column": "critical_pressure_MPa",
+      "output_to_reference_factor": 1000.0,
+      "historical_evidence": {
+        "reported_critical_value": 734.883,
+        "unit": "kPa",
+        "nominal_size_m": 0.08,
+        "elements": 240,
+        "mode": {"m": 1, "n": 8},
+        "provenance": "Historical report in VERIFICATION_CASES.md; no archived numerical run",
+        "archive_run_id": null
+      },
+      "approved_run_ids": []
+    },
+    {
+      "id": "C02",
+      "family": "Shells",
+      "path": "Shells/C02_Axial_Compression",
+      "title": "Uniform axial compression",
+      "analyses": ["LA", "LBA"],
+      "status": "Prepared",
+      "reference_source": "Brush and Almroth (1975), Chapter 5, section 5.5b, equations (5.50) and (5.52)",
+      "primary_reference": {"quantity": "critical_axial_stress", "value": 417.29, "unit": "MPa"},
+      "additional_references": [
+        {"quantity": "discrete_mode_minimum", "value": 417.354, "unit": "MPa", "m": 3, "n": 9}
+      ],
+      "result_column": "critical_stress_MPa",
+      "output_to_reference_factor": 1.0,
+      "historical_evidence": null,
+      "approved_run_ids": []
+    }
+  ]
+}

@@ -9,3 +9,8 @@ __pycache__/
 # Legacy output directories from the former Spanish-language layout.
 # Retained temporarily to prevent old untracked solver outputs appearing in Git.
 **/resultados/
+
+# Locally archived verification runs and generated index (not version-controlled)
+/archive/
+/registry/runs.csv
+/registry/runs.csv.tmp
