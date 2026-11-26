@@ -1,0 +1,26 @@
+{
+  "descripcion": "C02 | Brush y Almroth, capitulo 5, 5.5b: cilindro completo bajo compresion axial",
+  "unidades": "MN-m (E y sigma en MN/m2 = MPa)",
+  "D": 1.016,
+  "H": 0.508,
+  "t": 0.00508,
+  "E": 68947.57293168,
+  "nu": 0.3,
+  "sigma_ref": 1,
+  "n_modos": 6,
+  "tamano_mallas_m": [
+    0.64,
+    0.32,
+    0.16,
+    0.08,
+    0.06,
+    0.04,
+    0.03
+  ],
+  "recursos": {
+    "ncpus": 1,
+    "mpi_nbcpu": 1,
+    "memory_limit_MB": 2048,
+    "time_limit_s": 3600
+  }
+}
