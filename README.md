@@ -37,6 +37,8 @@ Code_Aster input (`.comm`), and reproducible execution instructions.
   Micromamba and the Code_Aster MPI environment, with reference versions.
 - [VERIFICATION_CASES.md](VERIFICATION_CASES.md): independent references,
   numerical comparisons, evidence and verification status.
+- [Registry and archive](registry/README.md): separate administrative catalogue,
+  local run index, snapshot capture and recovery (not used by student cases).
 
 ## Structural families
 
