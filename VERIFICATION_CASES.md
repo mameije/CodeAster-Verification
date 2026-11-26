@@ -43,7 +43,7 @@ The discrete Brush equation, evaluated for the configured geometry and
 searched wave numbers, gives **730.6414266 kPa** at \(m=1,\ n=8\).
 The older rounded reference of approximately 730.84 kPa is kept distinct.
 
-**Archived comparison:** \`C01-20261126T164332Z-b9740e\`.
+**Archived comparison:** `C01-20261126T164332Z-b9740e`.
 Each numerical value is the **smallest positive LBA eigenvalue** for
 that mesh, converted to critical pressure. Differences are calculated
 relative to the evaluated Brush Eq. (5.44), not the historical rounded value.
@@ -82,7 +82,7 @@ compressive-stress magnitude from Eq. (5.52) is approximately
 **417.290 MPa**. Discrete minimization of Eq. (5.50) gives
 **417.3543155 MPa** at theoretical wave counts \(m=3,\ n=9\).
 
-**Archived comparison:** \`C02-20261126T155920Z-9e1d93\`.
+**Archived comparison:** `C02-20261126T155920Z-9e1d93`.
 The table compares the **smallest positive numerical LBA eigenvalue**
 for each mesh with the **minimum theoretical stress** from Eq. (5.50).
 
@@ -103,12 +103,12 @@ analytical theory are **different checks**.
 The \(m=3,\ n=9\) values identify the **theoretical minimizer**;
 they are *not* an automatic identification of the numerical first
 eigenmode. Several axial-compression buckling eigenvalues are closely
-spaced. Another C02 archive, \`C02-20261126T161313Z-6e70da\`,
+spaced. Another C02 archive, `C02-20261126T161313Z-6e70da`,
 contains the same five numerical comparison values; it is not counted
 as a second independent convergence series here.
 
 The finite-element model uses balanced non-follower end line forces
-through native \`FORCE_ARETE\` and one reference-node axial restraint
+through native `FORCE_ARETE` and one reference-node axial restraint
 to remove rigid translation. See the [C02 model description](Shells/C02_Axial_Compression/README.md).
 
 **State:** **Benchmarked**. Numerical results now exist, with a
@@ -121,11 +121,11 @@ separate review tasks.
 The numerical and evaluated theoretical values above come from the
 version-controlled [comparison index](registry/comparisons.csv).
 The full solver artifacts and manifests remain under the **local**
-\`archive/\` directory, excluded from Git; a comparison row is not by
+`archive/` directory, excluded from Git; a comparison row is not by
 itself proof of solver termination or verification approval. Both
 tables report nominal target mesh size, not measured maximum element
 size. For reproducibility and detailed checks, use the associated run
-IDs to locate the original archived \`.mess\`, \`.med\`, mesh and CSV files.
+IDs to locate the original archived `.mess`, `.med`, mesh and CSV files.
 
 ---
 
