@@ -13,7 +13,7 @@
 
 This independent case benchmarks the native LA/LBA workflow of Code_Aster against
 the classical solution for a simply supported circular cylindrical shell under
-uniform, non-follower external radial pressure.
+uniform external radial pressure.
 
 **Source:** Brush and Almroth, *Buckling of Bars, Plates, and Shells* (1975),
 Chapter 5, §5.5a, pp. 161–164, with boundary-condition discussion in §5.5e.
@@ -41,7 +41,7 @@ waves (\(n=8\))**.
   at `BOTTOM_NODES` and `TOP_NODES`; bending rotations are free.
   One bottom shell node in `REFERENCE_NODE` has `DZ=0` solely to remove
   rigid axial translation. No rigid diaphragms or master nodes.
-- **Non-follower radial pressure:** fixed Cartesian load components
+- **Applied radial pressure:** fixed Cartesian load components
   \(f_X=-p_{\mathrm{ref}}X/R\) and \(f_Y=-p_{\mathrm{ref}}Y/R\),
   applied using native `AFFE_CHAR_MECA_F/FORCE_COQUE` and `FORMULE`.
   The load direction is not updated with the deformed shell.
@@ -52,9 +52,13 @@ waves (\(n=8\))**.
   \(p_{\mathrm{cr}}=\mu p_{\mathrm{ref}}\).
 
 The Donnell solution assumes an idealized membrane prestress field, whereas
-the finite-element model can develop boundary bending effects. Follower-load
-stiffness is not included; follower-pressure benchmark values are therefore
-not automatically equivalent.
+the finite-element model can develop boundary bending effects. In this conventional Code_Aster Euler LBA procedure, `RIGI_GEOM`
+assumes dead loads and does not incorporate a follower-load tangent
+stiffness. Thus **follower/non-follower is not a separate model option
+for this benchmark**. The fixed Cartesian load implementation is stated
+here for reproducibility; benchmark values from methods that include
+follower-pressure stiffness are not automatically equivalent.
+See [Code_Aster's Euler buckling guidance](https://code-aster.org/doc/v17/manuals/man_u/u2/u2.08.04/Analyse_de_flambement_d_Euler.html).
 
 ## Numerical comparison and mesh refinement
 
