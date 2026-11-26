@@ -50,7 +50,7 @@ class ArchiveUtilsTests(unittest.TestCase):
     def test_summary_and_finest_mesh(self):
         with tempfile.TemporaryDirectory() as temp:
             archive = Path(temp)
-            run = archive / "C02" / "C02-20261126T155920Z-9e1d93"
+            run = archive / "C02" / "C02-20260101T120000Z-abc123"
             run.mkdir(parents=True)
             results = [
                 {"mesh": "M01", "nominal_size_m": 0.15, "elements": 63,
