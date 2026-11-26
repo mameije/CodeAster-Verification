@@ -7,7 +7,7 @@
 **Documentation:** [Installation](../../INSTALLATION.md) · [Verification status](../../VERIFICATION_CASES.md).  
 **Last reviewed:** 26 November 2026.
 
-**Status: implementation prepared; no Code_Aster execution or verification completed for C02 yet.**
+**Status: Benchmarked; five-mesh LA/LBA comparison available; formal verification pending explicit acceptance criteria.**
 
 ## Reference problem
 
@@ -63,7 +63,31 @@ gives a predicted value of approximately **417.354 MPa** at
 the numerical buckling modes are **not assumed to be unique**.
 
 These reference values come from Brush's idealized analytical model,
-not from a completed Code_Aster analysis.
+and are now compared with completed Code_Aster numerical results.
+
+## Numerical comparison and mesh refinement
+
+The version-controlled [verification register](../../VERIFICATION_CASES.md)
+contains **all five meshes** from archived run
+`C02-20261126T155920Z-9e1d93`, compared with the evaluated
+Brush Eq. (5.50) minimum of **417.354 MPa**. The finest mesh
+(M05, 10,455 QUAD9) gives **403.303 MPa** (difference **−3.367%**).
+M04 and M05 differ by approximately 0.037 MPa.
+
+These are comparisons of the **minimum positive numerical eigenvalue**
+and the **minimum theoretical eigenvalue**, not a one-to-one match
+between buckling shapes. The \(m=3,\ n=9\) pair is the theoretical
+minimizer only. Closely spaced numerical eigenvalues require separate
+mode identification; no numerical mode counts are inferred from CSV data.
+
+A second archived run ID,
+`C02-20261126T161313Z-6e70da`, has the same five comparison
+values and is not treated here as independent validation.
+
+The mesh-refinement trend is documented, but agreement with the
+idealized analytical theory, prebuckling field, reactions, solver
+termination and explicit acceptance tolerances still require their
+own scientific review.
 
 ## Finite-element model
 
@@ -103,14 +127,14 @@ The case is independent of C01, but uses the same file organization:
 | `results/` | Local outputs, excluded from version control |
 
 The initial reference stress is `reference_stress_MPa=1`.
-The seven nominal sizes are
-`[0.64, 0.32, 0.16, 0.08, 0.06, 0.04, 0.03]` m.
+The five current nominal sizes are
+`[0.15, 0.1, 0.05, 0.025, 0.0125]` m.
 Shell boundary conditions are fixed in the `.comm`, not parameterized.
 
 From this directory with `aster-mpi` active:
 
 ```bash
-# Pilot: 0.08 m nominal mesh.
+# Example: 0.025 m nominal mesh (fourth entry).
 python3 run.py --mesh-index 4
 
 # All meshes for convergence.
@@ -138,10 +162,10 @@ critical stress for each completed mesh. Matplotlib writes
 `convergence_by_elements.svg` (stress vs. QUAD9 count) with
 Latin Modern Roman typography when available.
 
-## Required verification
+## Further verification checks
 
 1. Verify the QUAD9 surface and the two loaded SEG3 end boundaries.
-2. Execute the pilot mesh and review the Code_Aster `.mess` file.
+2. Review the archived Code_Aster `.mess` files and termination messages.
 3. Check equilibrium and the LA prestress field, expecting
    \(N_x\approx-\sigma_{\mathrm{ref}}t\) away from end effects.
 4. Compare the positive critical stress with **417.290 MPa**
@@ -152,4 +176,4 @@ Latin Modern Roman typography when available.
 6. Document acceptance tolerances and differences due to the Donnell
    approximation and boundary effects.
 
-**Verification state: prepared; execution and numerical comparison pending.**
+**Verification state: Benchmarked; five-mesh comparison completed, with formal verification closure pending.**

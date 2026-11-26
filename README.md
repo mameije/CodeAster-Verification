@@ -51,7 +51,7 @@ Code_Aster input (`.comm`), and reproducible execution instructions.
 | Case | Problem | Analysis | Status |
 | --- | --- | --- | --- |
 | [C01 — Radial pressure](Shells/C01_Radial_Pressure/README.md) | Circular cylindrical shell under uniform non-follower radial pressure | LA/LBA and mesh convergence | Benchmarked; formal closure pending |
-| [C02 — Axial compression](Shells/C02_Axial_Compression/README.md) | Circular cylindrical shell under uniformly distributed axial compression | LA/LBA and mesh convergence | Prepared; numerical testing pending |
+| [C02 — Axial compression](Shells/C02_Axial_Compression/README.md) | Circular cylindrical shell under uniformly distributed axial compression | LA/LBA and mesh convergence | Benchmarked; formal closure pending |
 
 Both cases use the native **COQUE_3D** shell formulation with **QUAD9**
 elements. Mesh refinement is controlled by an arbitrary list of element
