@@ -129,8 +129,9 @@ def resumen(indices, p):
                      'mu_crit':float(modos[0]['factor_critico_mu']),
                      'q_crit_MN_m2':q,'q_crit_kPa':1000*q,
                      'variacion_con_malla_previa_pct':''})
-    # Respeta el orden de la lista del alumno. La diferencia se calcula contra
-    # el anterior resultado de la lista, no es un estimador formal del error.
+    # El orden de las mallas coincide con tamano_mallas_m.
+    # La variacion porcentual se calcula respecto del resultado anterior;
+    # no representa un estimador a posteriori del error de discretizacion.
     for i in range(1,len(rows)):
         r0,r1=rows[i-1],rows[i]
         r1['variacion_con_malla_previa_pct']=100*abs(r1['q_crit_kPa']-r0['q_crit_kPa'])/abs(r1['q_crit_kPa'])
@@ -154,6 +155,19 @@ def resumen(indices, p):
                 ax.grid(True)
                 fig.tight_layout()
                 fig.savefig(RESULTADOS/'convergencia.svg')
+                plt.close(fig)
+
+                # Segunda representacion del mismo conjunto de resultados:
+                # presion critica en funcion del numero de elementos QUAD9.
+                fig,ax=plt.subplots()
+                ax.plot([r['elementos'] for r in rows],
+                        [r['q_crit_kPa'] for r in rows],'o-')
+                ax.set_xlabel('Numero de elementos QUAD9')
+                ax.set_ylabel('Primera carga critica LBA (kPa)')
+                ax.set_title('C01 - Convergencia por numero de elementos')
+                ax.grid(True)
+                fig.tight_layout()
+                fig.savefig(RESULTADOS/'convergencia_por_elementos.svg')
                 plt.close(fig)
             except ImportError:
                 print('Matplotlib no disponible; se conserva el CSV')

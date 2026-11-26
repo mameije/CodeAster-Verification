@@ -16,7 +16,9 @@ from mpi4py import MPI
 MPI_RANK = MPI.COMM_WORLD.Get_rank()
 
 # ----------------------------------------------------------------------
-# 01 | PARAMETROS: la entrada independiente es caso.json.
+# 01 | PARAMETROS: caso.json se genera a partir de parametros.json.
+#      Los parametros mecanicos se leen en el .comm; la creacion de las
+#      mallas y la administracion de carpetas permanecen en Python.
 # ----------------------------------------------------------------------
 carpeta = Path(__file__).resolve().parent
 caso = json.loads((carpeta / 'caso.json').read_text(encoding='utf-8'))
@@ -29,7 +31,10 @@ if n_modos<1 or n_modos>12:
 R = D/2.
 
 # ----------------------------------------------------------------------
-# 02 | MALLA Y MODELO: mismos comandos y COQUE_3D de Viento.
+# 02 | MALLA Y MODELO: COQUE_3D con elementos QUAD9.
+#      La malla representa la superficie media de un cilindro cerrado,
+#      sin duplicacion de nodos en la generatriz de cierre.
+#      EPAIS fija el espesor constante de la cascara.
 # ----------------------------------------------------------------------
 DEBUT()
 DEFI_FICHIER(ACTION='ASSOCIER',UNITE=20,FICHIER=str(carpeta/'cilindro.mail'),TYPE='ASCII',ACCES='OLD')
@@ -64,7 +69,9 @@ carga = AFFE_CHAR_MECA_F(MODELE=modelo,
     FORCE_COQUE=_F(GROUP_MA='PAROI',FX=fx,FY=fy))
 
 # ----------------------------------------------------------------------
-# 05 | LA: equilibrio y campos, como en Viento.
+# 05 | LA: equilibrio elastico lineal bajo la carga de referencia.
+#      Las tensiones resultantes constituyen el estado previo del LBA.
+#      Las reacciones se obtienen en los nodos del borde inferior.
 # ----------------------------------------------------------------------
 la = MECA_STATIQUE(MODELE=modelo,CHAM_MATER=mat,CARA_ELEM=seccion,
     EXCIT=(_F(CHARGE=apoyos),_F(CHARGE=carga)))
@@ -83,8 +90,12 @@ if MPI_RANK==0:
 print('LA: reacciones globales base [MN]:',rx,ry,rz)
 
 # ----------------------------------------------------------------------
-# 06 | LBA: armado elastico/geometrico sin reinterpretacion en Python.
-#      Mismo procedimiento de Viento.
+# 06 | LBA: ensamblaje de rigideces y problema de autovalores.
+#      K  : rigidez elastica calculada con RIGI_MECA.
+#      Kg : rigidez geometrica calculada con RIGI_GEOM a partir de
+#           SIEF_ELGA del estado previo bajo q_ref.
+#      La carga critica se obtiene como q_cr = mu * q_ref.
+#      El problema se resuelve con operadores nativos de Code_Aster.
 # ----------------------------------------------------------------------
 s0 = CREA_CHAMP(TYPE_CHAM='ELGA_SIEF_R',OPERATION='EXTR',
     RESULTAT=la,NOM_CHAM='SIEF_ELGA',NUME_ORDRE=1)
@@ -97,7 +108,12 @@ ke = ASSE_MATRICE(MATR_ELEM=k0,NUME_DDL=nddl)
 kg = ASSE_MATRICE(MATR_ELEM=kg0,NUME_DDL=nddl)
 
 # ----------------------------------------------------------------------
-# 07 | MISMOS COMANDOS INFO_MODE / STURM / CALC_MODES DE VIENTO.
+# 07 | BUSQUEDA Y CALCULO DE AUTOVALORES POSITIVOS.
+#      INFO_MODE/STURM cuenta autovalores dentro de una banda [0, upper].
+#      La cota superior se duplica hasta contener los modos solicitados;
+#      se ajusta si la banda acumula demasiados autovalores.
+#      CALC_MODES resuelve el problema de pandeo en la banda encontrada.
+#      Los modos positivos se ordenan por factor critico creciente.
 # ----------------------------------------------------------------------
 def sturm(cota):
     tab = INFO_MODE(TYPE_MODE='MODE_FLAMB',MATR_RIGI=ke,
