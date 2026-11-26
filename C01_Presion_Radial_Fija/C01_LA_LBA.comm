@@ -5,8 +5,8 @@ Basado en TanqueViento_LA_LBA.comm (mameije/Viento), manteniendo
 MECA_STATIQUE -> SIEF_ELGA -> CALC_MATR_ELEM -> CALC_MODES.
 Unidades: MN, m, MPa (= MN/m2).
 
-ATENCION: La definicion de los apoyos constituye una condicion mecanica
-concreta, NO una coincidencia aun certificada con el caso clasico de Brush.
+Condiciones de borde inspiradas en Brush y Almroth, capitulo 5,
+secciones 5.5a y 5.5e. La equivalencia cuantitativa requiere verificacion.
 """
 from code_aster.Commands import *
 from pathlib import Path
@@ -22,13 +22,10 @@ carpeta = Path(__file__).resolve().parent
 caso = json.loads((carpeta / 'caso.json').read_text(encoding='utf-8'))
 D,H,t,E,nu,q_ref = (float(caso[k]) for k in ('D','H','t','E','nu','q_ref'))
 n_modos = int(caso['n_modos'])
-apoyo = str(caso['apoyo']).upper()
 if not (D>0 and H>0 and t>0 and E>0 and q_ref>0 and -1<nu<.5):
     raise ValueError('Parametros de geometria, material o carga invalidos')
 if n_modos<1 or n_modos>12:
     raise ValueError('n_modos debe estar entre 1 y 12')
-if apoyo!='BASE_ARTICULADA_SUP_LIBRE':
-    raise ValueError('C01 inicial admite BASE_ARTICULADA_SUP_LIBRE')
 R = D/2.
 
 # ----------------------------------------------------------------------
@@ -43,11 +40,17 @@ material = DEFI_MATERIAU(ELAS=_F(E=E,NU=nu))
 mat = AFFE_MATERIAU(MAILLAGE=malla,AFFE=_F(GROUP_MA='PAROI',MATER=material))
 
 # ----------------------------------------------------------------------
-# 03 | APOYOS. Base con traslaciones anuladas, giros libres;
-#      borde superior completamente libre. Misma base traslacional de Viento.
-#      No se declara diafragma superior ni simetria (cilindro completo).
+# 03 | CONDICIONES DE BORDE DE BRUSH (C01 fijas, no parametrizables):
+#      w = v = 0 en z=0,H  -> DX=DY=0 en ambos anillos.
+#      Giro meridional libre: condicion natural de momento de borde nulo.
+#      u axial libre en los anillos; se anula exclusivamente DZ de un
+#      nodo del borde inferior para eliminar la traslacion rigida axial.
+#      No se incorpora diafragma rigido ni nodos maestros.
 # ----------------------------------------------------------------------
-apoyos = AFFE_CHAR_MECA(MODELE=modelo,DDL_IMPO=_F(GROUP_NO='BORDE_INF',DX=0.,DY=0.,DZ=0.))
+apoyos = AFFE_CHAR_MECA(MODELE=modelo,DDL_IMPO=(
+    _F(GROUP_NO=('BORDE_INF','BORDE_SUP'),DX=0.,DY=0.),
+    _F(GROUP_NO='NODO_REF',DZ=0.),
+))
 
 # ----------------------------------------------------------------------
 # 04 | PRESION NO SEGUIDORA. Componentes en ejes globales fijos.
@@ -138,5 +141,6 @@ if MPI_RANK==0:
         {'id':caso['id'],'D':D,'H':H,'t':t,'E':E,'nu':nu,
          'q_ref':q_ref,'n_modos_obtenidos':len(pares),
          'modo_1_mu':pares[0][0],'q_cr_MN_m2':pares[0][0]*q_ref,
-         'apoyo':apoyo,'presion':'radial fija en geometria indeformada'})
+         'condiciones_borde':'Brush: DX=DY=0 en ambos bordes; DZ=0 en NODO_REF (inferior); giros libres',
+         'presion':'radial fija en geometria indeformada'})
 FIN()

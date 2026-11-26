@@ -1,15 +1,19 @@
 {
-  "descripcion": "C01 | cilindro completo | presion radial uniforme no seguidora",
+  "descripcion": "C01 | Brush y Almroth, capitulo 5, 5.5a: cilindro completo bajo presion radial fija",
   "unidades": "MN-m (E en MN/m2, q en MN/m2)",
-  "D": 2.0,
-  "H": 2.0,
-  "t": 0.010,
-  "E": 200000.0,
+  "D": 1.016,
+  "H": 0.508,
+  "t": 0.00508,
+  "E": 68947.57293168,
   "nu": 0.3,
   "q_ref": 0.001,
   "n_modos": 6,
-  "apoyo": "BASE_ARTICULADA_SUP_LIBRE",
-  "tamano_mallas_m": [0.30, 0.20, 0.15, 0.10],
+  "tamano_mallas_m": [
+    0.08,
+    0.06,
+    0.04,
+    0.03
+  ],
   "recursos": {
     "ncpus": 1,
     "mpi_nbcpu": 1,

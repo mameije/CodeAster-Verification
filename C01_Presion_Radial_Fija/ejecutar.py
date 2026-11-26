@@ -28,8 +28,6 @@ def configuracion():
             raise ValueError(f'{k} debe ser positivo y finito')
     if not -1 < p['nu'] < .5: raise ValueError('nu fuera del rango elastico admisible')
     if p['t']>=p['D']/2: raise ValueError('C01 requiere t < R')
-    if p['apoyo']!='BASE_ARTICULADA_SUP_LIBRE':
-        raise ValueError('Solo se implemento BASE_ARTICULADA_SUP_LIBRE')
     if not isinstance(p['n_modos'],int) or not 1<=p['n_modos']<=12:
         raise ValueError('n_modos debe estar entre 1 y 12')
     hs = p['tamano_mallas_m']
@@ -52,7 +50,7 @@ def preparar(i, p):
     directorio=RAIZ/'resultados'/f'M{i:02d}'
     directorio.mkdir(parents=True,exist_ok=True)
     meta=generar_malla(directorio/'cilindro.mail',p['D'],p['H'],h)
-    datos={k:p[k] for k in ('D','H','t','E','nu','q_ref','n_modos','apoyo')}
+    datos={k:p[k] for k in ('D','H','t','E','nu','q_ref','n_modos')}
     datos['id']=f'C01_M{i:02d}'
     datos['h_nominal_m']=h
     (directorio/'caso.json').write_text(json.dumps(datos,indent=2),encoding='utf-8')
