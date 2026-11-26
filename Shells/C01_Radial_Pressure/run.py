@@ -176,6 +176,14 @@ def plot(rows, required=False):
             raise RuntimeError("Matplotlib is not installed in the active Python") from exc
         print("Matplotlib unavailable; convergence.csv was preserved", flush=True)
         return
+    # TeX Live keeps Latin Modern outside Matplotlib's default font search paths.
+    # Register it when available; otherwise retain the existing serif fallback.
+    latin_modern = Path("/usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf")
+    if latin_modern.is_file():
+        try:
+            font_manager.fontManager.addfont(str(latin_modern))
+        except (OSError, RuntimeError):
+            pass
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = ["Latin Modern Roman", "DejaVu Serif"]
     plt.rcParams["svg.fonttype"] = "none"
