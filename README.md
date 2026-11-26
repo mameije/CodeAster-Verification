@@ -21,15 +21,15 @@ administrators are required.
 
 After the repository has been renamed and made public, it can be cloned using:
 
-\`\`\`bash
+```bash
 git clone https://github.com/mameije/CodeAster-Verification.git
 cd CodeAster-Verification
 code .
-\`\`\`
+```
 
 Each benchmark contains a reference publication, an explicitly defined
-finite-element model, editable configuration in \`parameters.json\`, native
-Code_Aster input (\`.comm\`), and reproducible execution instructions.
+finite-element model, editable configuration in `parameters.json`, native
+Code_Aster input (`.comm`), and reproducible execution instructions.
 
 ## Documentation
 
@@ -58,9 +58,9 @@ sizes in each case configuration.
 - Mechanical assumptions and shell boundary conditions are fixed by the
   selected benchmark, rather than exposed as arbitrary configuration
   alternatives.
-- Each case has its own \`run.py\`, \`generate_mesh.py\`, \`write_results.py\`,
-  \`parameters.json\`, and native \`.comm\` file.
-- Generated \`results/\` directories are excluded from Git.
+- Each case has its own `run.py`, `generate_mesh.py`, `write_results.py`,
+  `parameters.json`, and native `.comm` file.
+- Generated `results/` directories are excluded from Git.
 - A case is marked **verified** only when the reference, boundary conditions,
   numerical evidence, convergence and acceptance criteria are documented.
 
