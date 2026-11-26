@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "Brush and Almroth (1975), Buckling of Bars, Plates, and Shells, chapter 5",
+  "models": {
+    "C01": {
+      "id": "brush_1975_eq_5_44",
+      "equation": "(5.44)",
+      "printed_page": 163,
+      "quantity": "critical radial pressure",
+      "unit": "kPa",
+      "search_limits": {"m_min": 1, "m_max": 32, "n_min": 1, "n_max": 64}
+    },
+    "C02": {
+      "id": "brush_1975_eq_5_50",
+      "equation": "(5.50)",
+      "printed_page": 168,
+      "quantity": "critical axial compressive stress magnitude",
+      "unit": "MPa",
+      "search_limits": {"m_min": 1, "m_max": 32, "n_min": 0, "n_max": 64}
+    }
+  }
+}
