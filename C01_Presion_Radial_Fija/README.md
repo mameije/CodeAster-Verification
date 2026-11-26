@@ -1,11 +1,11 @@
 # C01: LBA de cilindro bajo presion radial fija
 
-**Estado:** condiciones de borde actualizadas para el problema clasico de Brush. **NO** ejecutado en Code_Aster; pendiente verificar la convergencia y la comparacion cuantitativa.
+**Estado:** primera ejecucion local LA/LBA de M01 completada; resultado comunicado: 734.883 kPa. Pendientes el analisis modal, el estudio de convergencia ampliado y el contraste cuantitativo de las hipotesis del modelo.
 
 ## Dos objetivos
 
 1. **Verificacion**: comprobar que la secuencia LA -> matriz geometrica -> LBA reproduce el comportamiento esperado bajo presion radial uniforme, con sensibilidad de malla. La verificacion cuantitativa **no esta cerrada** hasta cotejar una solucion independiente con las mismas condiciones mecanicas.
-2. **Posgrado**: permitir que el alumno lea el `.comm`, cambie dimensiones, material y un tamano de malla, y ejecute el mismo caso. La lista de N mallas es optativa para estudiar la convergencia; no se realiza un barrido de geometria.
+2. **Posgrado**: ejercicio reproducible con lectura del `.comm`, variacion de geometria, material y tamano de malla mediante `parametros.json`, y ejecucion local. La lista de N mallas permite estudiar la convergencia; no se realiza un barrido de geometria.
 
 ## Procedencia y fidelidad al proyecto Viento
 
@@ -27,7 +27,7 @@ Cambios respecto de Viento **solo por el nuevo problema mecanico**:
 - No hay nodos maestros ni relaciones RBE3/RBE2. Estas condiciones son fijas en C01 y no se parametrizan.
 - JSON en lugar de Excel, ejecucion secuencial local. Sin Slurm, criterios KC ni utilidades de Viento.
 
-> **Nota mecanica:** un patron de fuerzas radiales aplicado en la geometria indeformada no es la misma formulacion que una presion hidrostatica seguidora sobre la superficie deformada. La matriz `RIGI_GEOM` emplea el estado previo de tensiones; este ejercicio no incorpora una matriz adicional de rigidez tangente de carga seguidora. No comparar sin mas los autovalores con formulas que incluyan ese efecto.
+> **Nota mecanica:** un patron de fuerzas radiales aplicado en la geometria indeformada no es la misma formulacion que una presion hidrostatica seguidora sobre la superficie deformada. La matriz `RIGI_GEOM` emplea el estado previo de tensiones; este ejercicio no incorpora una matriz adicional de rigidez tangente de carga seguidora. La comparacion directa con formulaciones de cargas seguidoras no resulta mecanicamente equivalente.
 
 ## Parametros (archivo `parametros.json`)
 
@@ -48,11 +48,11 @@ La configuracion inicial reproduce los datos del ejemplo numerico de *Buckling o
 | ---: | ---: | ---: | ---: | ---: |
 | 1.016 m | 0.508 m | 0.00508 m | 68947.57293 MN/m2 | 0.30 |
 
-La ecuacion (5.45), bajo las hipotesis de Donnell y con los bordes simplemente apoyados, predice aproximadamente **p_cr = 106 psi = 730.84 kPa**, con **m=1** semionda longitudinal y **n=8** ondas circunferenciales. Es una referencia independiente para verificar, **no un resultado todavia obtenido con Code_Aster**.
+La ecuacion (5.45), bajo las hipotesis de Donnell y con los bordes simplemente apoyados, predice aproximadamente **p_cr = 106 psi = 730.84 kPa**, con **m=1** semionda longitudinal y **n=8** ondas circunferenciales. Es una referencia teorica independiente; el resultado numerico y su correspondencia modal deben analizarse separadamente.
 
 La referencia usa las condiciones `w=w,xx=0` en ambos bordes (ec. 5.42); al considerar tambien las relaciones `u,v`, la sec. 5.5e precisa `u,x=v=0`. En el modelo FEM se imponen `w=v=0` por `DX=DY=0` y se dejan libres los giros y el movimiento axial (salvo la eliminacion del movimiento rigido). La condicion de momento flector nulo y el esfuerzo axial libre son **naturales** en la formulacion de cascaras; su equivalencia con el modelo idealizado debe comprobarse al analizar los resultados.
 
-La presion de referencia `q_ref=0.001 MN/m2` sirve para calcular el factor de carga LBA; la carga critica es `mu_cr*q_ref`. La lista inicial de mallas es [0.08, 0.06, 0.04, 0.03] m; el alumno puede definir cualquier cantidad N de tamanos. Se conservan los comandos nativos de Aster para el calculo.
+La presion de referencia `q_ref=0.001 MN/m2` sirve para calcular el factor de carga LBA; la carga critica es `mu_cr*q_ref`. La lista de mallas es `[0.64, 0.32, 0.16, 0.08, 0.06, 0.04, 0.03]` m, de mayor a menor tamano nominal; se admite una cantidad arbitraria N de tamanos distintos. Se conservan los comandos nativos de Aster para el calculo.
 
 ## Ejecucion con WSL y el entorno de Code_Aster
 
@@ -79,17 +79,22 @@ Si `run_aster` tiene otra ruta, se puede pasar `--aster /ruta/a/run_aster`.
 
 **Limpieza automatica:** al iniciar cualquiera de los comandos anteriores, el ejecutor elimina por completo la carpeta `resultados/` de C01 y la vuelve a crear vacia. Esto incluye mallas M01, M02, archivos `.med`, `.mess`, CSV y graficos previos. `--solo-preparar` tambien limpia `resultados/`. No se modifica `parametros.json`, el `.comm` original ni otros directorios del proyecto. El programa comprueba primero el rango de indices y, cuando se va a ejecutar Aster, que exista `run_aster`. Por seguridad, se rechaza una carpeta `resultados` que sea un enlace simbolico. **No ejecutar dos instancias a la vez**, ya que una podria borrar los resultados de la otra.
 
-Cada malla seleccionada genera su carpeta `resultados/M01`, `M02`, ... con `cilindro.mail`, `caso.json`, `.comm`, `.export` y salidas. El CSV `resultados/convergencia.csv` contiene el primer factor critico positivo, la primera carga critica y la variacion respecto de la malla anterior; con Matplotlib, se escribe `convergencia.svg`. Si se ejecuta `--indice 1` solo se crea `M01`; para conservar varios resultados en una misma ejecucion, usar `--convergencia`.
+Cada malla seleccionada genera su carpeta `resultados/M01`, `M02`, ... con `cilindro.mail`, `caso.json`, `.comm`, `.export` y salidas. El CSV `resultados/convergencia.csv` contiene el primer factor critico positivo, la primera carga critica y la variacion respecto de la malla anterior. Cuando existen al menos dos resultados y Matplotlib esta disponible, se generan dos figuras:
 
-**No se ejecutan multiples geometrias, imperfecciones ni campanas**. El alumno cambia un parametro del JSON y repite manualmente si quiere. Al modificar la geometria, volver a generar los casos anteriores de la carpeta `resultados` si se desean comparaciones consistentes: `--convergencia` vuelve a preparar y ejecutar todas las mallas seleccionadas.
+- `resultados/convergencia.svg`: carga critica en funcion del tamano real maximo del elemento (`h_real_max_m`).
+- `resultados/convergencia_por_elementos.svg`: carga critica en funcion del numero total de elementos QUAD9 (`elementos`).
 
-## Comprobaciones fisicas a realizar tras la primera ejecucion
+La abscisa de la segunda figura es el numero de elementos, no el numero de nodos. Para `--indice 1` solo se genera `M01`; `--convergencia` prepara y resuelve secuencialmente las N mallas.
+
+**No se ejecutan multiples geometrias, imperfecciones ni campanas.** Las modificaciones de parametros se realizan directamente en `parametros.json`. Cada ejecucion reinicia `resultados/`; `--convergencia` prepara y resuelve todas las mallas indicadas en la configuracion vigente.
+
+## Comprobaciones fisicas y numericas
 
 1. `run_aster` debe terminar sin errores, con campos LA y modos LBA visibles en `C01_LA.med` y `C01_LBA.med`.
 2. Evaluar fuerzas y desplazamientos LA; la resultante global ideal de una presion uniforme en cilindro cerrado es cero, sin que ello signifique esfuerzo nulo. Para un estado de membrana alejado de los bordes, `N_theta ≈ -q_ref R` es una comprobacion preliminar; Brush considera una idealizacion de membrana del estado previo, mientras que el FEM puede presentar efectos de borde.
 3. Visualizar en ParaView los modos: revisar ovalizaciones, numeros de ondas y modos proximos. **La convergencia del primer autovalor no garantiza por si sola la correspondencia modal.**
 4. Revisar tiempos, nodos y carga critica conforme se refina la malla. `h_nominal` es un objetivo: la columna `h_real_max_m` indica el tamano geometrico realmente obtenido.
-5. Comparar la presion critica y el patron modal con Brush (ecuacion 5.45; 106 psi, m=1, n=8). Analizar las diferencias por teoria Donnell, condiciones de borde y modelado de carga. Hasta entonces: **verificacion pendiente**, no declarar el caso validado.
+5. Comparar la presion critica y el patron modal con Brush (ecuacion 5.45; 106 psi, m=1, n=8). Las diferencias deben interpretarse considerando la teoria de Donnell, las condiciones de borde y la formulacion de carga. **La verificacion permanece pendiente** hasta completar el contraste.
 
 ## Documentacion tecnica consultada
 
