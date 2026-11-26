@@ -22,6 +22,7 @@ empleados en el proyecto Viento, sin depender de dicho repositorio.
 | Caso | Problema | Análisis | Documentación |
 | --- | --- | --- | --- |
 | C01 | Cilindro bajo presión radial uniforme no seguidora | LA / LBA y convergencia de malla | [C01](C01_Presion_Radial_Fija/README.md) |
+| C02 | Cilindro bajo compresión axial uniforme | LA / LBA y convergencia de malla | [C02](C02_Compresion_Axial/README.md) |
 
 Los parámetros de cada caso se establecen en su archivo `parametros.json`.
 Los resultados numéricos se generan localmente y no se incorporan al repositorio.
