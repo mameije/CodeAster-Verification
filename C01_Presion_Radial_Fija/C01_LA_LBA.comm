@@ -1,0 +1,142 @@
+# coding=utf-8
+"""C01 | LA + LBA de cilindro bajo presion radial uniforme NO seguidora.
+
+Basado en TanqueViento_LA_LBA.comm (mameije/Viento), manteniendo
+MECA_STATIQUE -> SIEF_ELGA -> CALC_MATR_ELEM -> CALC_MODES.
+Unidades: MN, m, MPa (= MN/m2).
+
+ATENCION: La definicion de los apoyos constituye una condicion mecanica
+concreta, NO una coincidencia aun certificada con el caso clasico de Brush.
+"""
+from code_aster.Commands import *
+from pathlib import Path
+import json, math
+from escritura_resultados import escribir_csv, escribir_json
+from mpi4py import MPI
+MPI_RANK = MPI.COMM_WORLD.Get_rank()
+
+# ----------------------------------------------------------------------
+# 01 | PARAMETROS: la entrada independiente es caso.json.
+# ----------------------------------------------------------------------
+carpeta = Path(__file__).resolve().parent
+caso = json.loads((carpeta / 'caso.json').read_text(encoding='utf-8'))
+D,H,t,E,nu,q_ref = (float(caso[k]) for k in ('D','H','t','E','nu','q_ref'))
+n_modos = int(caso['n_modos'])
+apoyo = str(caso['apoyo']).upper()
+if not (D>0 and H>0 and t>0 and E>0 and q_ref>0 and -1<nu<.5):
+    raise ValueError('Parametros de geometria, material o carga invalidos')
+if n_modos<1 or n_modos>12:
+    raise ValueError('n_modos debe estar entre 1 y 12')
+if apoyo!='BASE_ARTICULADA_SUP_LIBRE':
+    raise ValueError('C01 inicial admite BASE_ARTICULADA_SUP_LIBRE')
+R = D/2.
+
+# ----------------------------------------------------------------------
+# 02 | MALLA Y MODELO: mismos comandos y COQUE_3D de Viento.
+# ----------------------------------------------------------------------
+DEBUT()
+DEFI_FICHIER(ACTION='ASSOCIER',UNITE=20,FICHIER=str(carpeta/'cilindro.mail'),TYPE='ASCII',ACCES='OLD')
+malla = LIRE_MAILLAGE(FORMAT='ASTER',UNITE=20)
+modelo = AFFE_MODELE(MAILLAGE=malla,AFFE=_F(TOUT='OUI',PHENOMENE='MECANIQUE',MODELISATION='COQUE_3D'))
+seccion = AFFE_CARA_ELEM(MODELE=modelo,COQUE=_F(GROUP_MA='PAROI',EPAIS=t,VECTEUR=(0.,0.,1.)))
+material = DEFI_MATERIAU(ELAS=_F(E=E,NU=nu))
+mat = AFFE_MATERIAU(MAILLAGE=malla,AFFE=_F(GROUP_MA='PAROI',MATER=material))
+
+# ----------------------------------------------------------------------
+# 03 | APOYOS. Base con traslaciones anuladas, giros libres;
+#      borde superior completamente libre. Misma base traslacional de Viento.
+#      No se declara diafragma superior ni simetria (cilindro completo).
+# ----------------------------------------------------------------------
+apoyos = AFFE_CHAR_MECA(MODELE=modelo,DDL_IMPO=_F(GROUP_NO='BORDE_INF',DX=0.,DY=0.,DZ=0.))
+
+# ----------------------------------------------------------------------
+# 04 | PRESION NO SEGUIDORA. Componentes en ejes globales fijos.
+#      Vector superficial f(X,Y) = -q_ref * (X/R,Y/R,0), fijado
+#      en la geometria indeformada. NO se usa FORCE_COQUE/PRES
+#      ni una rigidez tangente de carga seguidora.
+# ----------------------------------------------------------------------
+fx = FORMULE(NOM_PARA=('X',),VALE=f'(-{q_ref:.17g})*X/({R:.17g})')
+fy = FORMULE(NOM_PARA=('Y',),VALE=f'(-{q_ref:.17g})*Y/({R:.17g})')
+carga = AFFE_CHAR_MECA_F(MODELE=modelo,
+    FORCE_COQUE=_F(GROUP_MA='PAROI',FX=fx,FY=fy))
+
+# ----------------------------------------------------------------------
+# 05 | LA: equilibrio y campos, como en Viento.
+# ----------------------------------------------------------------------
+la = MECA_STATIQUE(MODELE=modelo,CHAM_MATER=mat,CARA_ELEM=seccion,
+    EXCIT=(_F(CHARGE=apoyos),_F(CHARGE=carga)))
+la = CALC_CHAMP(reuse=la,RESULTAT=la,FORCE=('REAC_NODA',))
+IMPR_RESU(FORMAT='MED',PROC0='OUI',UNITE=80,
+    RESU=_F(RESULTAT=la,NOM_CHAM=('DEPL','REAC_NODA')))
+tab = POST_RELEVE_T(ACTION=_F(INTITULE='REAC_BASE',OPERATION='EXTRACTION',
+    RESULTAT=la,NOM_CHAM='REAC_NODA',GROUP_NO='BORDE_INF',
+    REPERE='GLOBAL',RESULTANTE=('DX','DY','DZ')))
+fila = next(iter(tab.EXTR_TABLE()))
+rx,ry,rz = [float(fila[k]) for k in ('DX','DY','DZ')]
+if MPI_RANK==0:
+    escribir_csv(carpeta/'C01_LA_resultados.csv',
+        ('Rx_base_MN','Ry_base_MN','Rz_base_MN','D_m','H_m','t_m','q_ref_MN_m2'),
+        [(rx,ry,rz,D,H,t,q_ref)])
+print('LA: reacciones globales base [MN]:',rx,ry,rz)
+
+# ----------------------------------------------------------------------
+# 06 | LBA: armado elastico/geometrico sin reinterpretacion en Python.
+#      Mismo procedimiento de Viento.
+# ----------------------------------------------------------------------
+s0 = CREA_CHAMP(TYPE_CHAM='ELGA_SIEF_R',OPERATION='EXTR',
+    RESULTAT=la,NOM_CHAM='SIEF_ELGA',NUME_ORDRE=1)
+k0 = CALC_MATR_ELEM(OPTION='RIGI_MECA',MODELE=modelo,
+    CHAM_MATER=mat,CARA_ELEM=seccion,CHARGE=apoyos)
+kg0 = CALC_MATR_ELEM(OPTION='RIGI_GEOM',MODELE=modelo,
+    CARA_ELEM=seccion,SIEF_ELGA=s0)
+nddl = NUME_DDL(MATR_RIGI=k0)
+ke = ASSE_MATRICE(MATR_ELEM=k0,NUME_DDL=nddl)
+kg = ASSE_MATRICE(MATR_ELEM=kg0,NUME_DDL=nddl)
+
+# ----------------------------------------------------------------------
+# 07 | MISMOS COMANDOS INFO_MODE / STURM / CALC_MODES DE VIENTO.
+# ----------------------------------------------------------------------
+def sturm(cota):
+    tab = INFO_MODE(TYPE_MODE='MODE_FLAMB',MATR_RIGI=ke,
+        MATR_RIGI_GEOM=kg,CHAR_CRIT=(0.,float(cota)),
+        COMPTAGE=_F(METHODE='STURM'))
+    vals = tab.EXTR_TABLE().values()['NB_MODE']
+    if len(vals)!=1: raise RuntimeError('Recuento Sturm no unico')
+    return int(vals[0])
+upper = 1.
+for k in range(28):
+    num = sturm(upper)
+    print(f'LBA/STURM: [0,{upper:.8g}] -> {num} modos')
+    if num>=n_modos: break
+    upper *= 2.
+else:
+    raise RuntimeError('No se encontraron suficientes autovalores positivos')
+if num>20:
+    lower = 0.
+    for _ in range(35):
+        mid=(lower+upper)/2; nm=sturm(mid)
+        if nm<n_modos: lower=mid
+        else: upper=mid; num=nm
+        if n_modos<=num<=20: break
+if num>20: raise RuntimeError('Mas de 20 modos en banda: revisar espectro')
+modos = CALC_MODES(TYPE_RESU='MODE_FLAMB',MATR_RIGI=ke,
+    MATR_RIGI_GEOM=kg,OPTION='BANDE',
+    CALC_CHAR_CRIT=_F(CHAR_CRIT=(0.,upper)),
+    SOLVEUR_MODAL=_F(METHODE='SORENSEN',DIM_SOUS_ESPACE=max(40,2*num+8),NMAX_ITER_SOREN=80),
+    VERI_MODE=_F(STURM='NON',STOP_ERREUR='OUI',SEUIL=1.e-6))
+a = modos.getAccessParameters(False)
+pares = sorted((float(mu),int(o)) for mu,o in zip(a['CHAR_CRIT'],a['NUME_ORDRE']) if float(mu)>0)
+if not pares: raise RuntimeError('No se exporto ningun modo positivo')
+if MPI_RANK==0:
+    escribir_csv(carpeta/'C01_LBA_resultados.csv',
+        ('modo_positivo','NUME_ORDRE','factor_critico_mu','q_critica_MN_m2'),
+        [(i,orden,mu,mu*q_ref) for i,(mu,orden) in enumerate(pares,1)])
+IMPR_RESU(FORMAT='MED',PROC0='OUI',UNITE=81,
+    RESU=_F(RESULTAT=modos,NOM_CHAM='DEPL'))
+if MPI_RANK==0:
+    escribir_json(carpeta/'C01_metadatos.json',
+        {'id':caso['id'],'D':D,'H':H,'t':t,'E':E,'nu':nu,
+         'q_ref':q_ref,'n_modos_obtenidos':len(pares),
+         'modo_1_mu':pares[0][0],'q_cr_MN_m2':pares[0][0]*q_ref,
+         'apoyo':apoyo,'presion':'radial fija en geometria indeformada'})
+FIN()
