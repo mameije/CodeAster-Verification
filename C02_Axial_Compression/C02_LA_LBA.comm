@@ -1,0 +1,206 @@
+# -*- coding: utf-8 -*-
+"""C02 | Linear analysis (LA) and linear buckling analysis (LBA).
+
+Reference: Brush and Almroth (1975), Chapter 5, Section 5.5b.
+Native Code_Aster workflow:
+    MECA_STATIQUE -> SIEF_ELGA -> RIGI_MECA/RIGI_GEOM -> CALC_MODES
+Units: MN, m, MPa (1 MN/m^2 = 1 MPa).
+"""
+from code_aster.Commands import *
+from pathlib import Path
+import json
+import math
+from write_results import write_csv, write_json
+from mpi4py import MPI
+
+MPI_RANK = MPI.COMM_WORLD.Get_rank()
+
+# ----------------------------------------------------------------------
+# 01 | PARAMETERS
+#      case.json is created from parameters.json by run.py.
+#      Numerical mechanics remain here; file preparation stays in Python.
+# ----------------------------------------------------------------------
+workdir = Path(__file__).resolve().parent
+case_data = json.loads((workdir / "case.json").read_text(encoding="utf-8"))
+D, H, t, E, nu, stress_ref = (
+    float(case_data[key]) for key in
+    ("D", "H", "t", "E", "nu", "reference_stress_MPa")
+)
+num_modes = int(case_data["num_modes"])
+if not (D > 0 and H > 0 and t > 0 and E > 0 and stress_ref > 0 and -1 < nu < 0.5):
+    raise ValueError("Invalid geometry, material or reference load")
+if not 1 <= num_modes <= 12:
+    raise ValueError("num_modes must be between 1 and 12")
+R = D / 2.0
+
+# ----------------------------------------------------------------------
+# 02 | MESH, COQUE_3D SHELL MODEL, MATERIAL AND THICKNESS
+#      QUAD9 shell elements represent the cylinder midsurface.
+#      The circumferential seam has no duplicate nodes.
+# ----------------------------------------------------------------------
+DEBUT()
+DEFI_FICHIER(ACTION="ASSOCIER", UNITE=20,
+    FICHIER=str(workdir / "cylinder.mail"), TYPE="ASCII", ACCES="OLD")
+mesh = LIRE_MAILLAGE(FORMAT="ASTER", UNITE=20)
+# The auxiliary SEG3 edges only define load boundaries, not shell elements.
+model = AFFE_MODELE(MAILLAGE=mesh,
+    AFFE=_F(GROUP_MA="SHELL", PHENOMENE="MECANIQUE", MODELISATION="COQUE_3D"))
+shell_properties = AFFE_CARA_ELEM(MODELE=model,
+    COQUE=_F(GROUP_MA="SHELL", EPAIS=t, VECTEUR=(0.0, 0.0, 1.0)))
+elastic_material = DEFI_MATERIAU(ELAS=_F(E=E, NU=nu))
+material_field = AFFE_MATERIAU(MAILLAGE=mesh,
+    AFFE=_F(GROUP_MA="SHELL", MATER=elastic_material))
+
+# ----------------------------------------------------------------------
+# 03 | BRUSH END CONDITIONS (fixed for this verification case)
+#      Radial and circumferential displacement vanish on both edges:
+#      w = v = 0, imposed through global DX = DY = 0.
+#      Shell rotations are left free (natural bending-moment condition).
+#      Axial displacement is free except at one bottom shell node, where
+#      DZ = 0 removes rigid translation without creating a diaphragm.
+# ----------------------------------------------------------------------
+supports = AFFE_CHAR_MECA(MODELE=model, DDL_IMPO=(
+    _F(GROUP_NO=("BOTTOM_NODES", "TOP_NODES"), DX=0.0, DY=0.0),
+    _F(GROUP_NO="REFERENCE_NODE", DZ=0.0),
+))
+
+# ----------------------------------------------------------------------
+# 04 | UNIFORM NON-FOLLOWER AXIAL COMPRESSION
+#      stress_ref is the positive magnitude of axial compression [MPa].
+#      Membrane force Nx = -stress_ref * t [MN/m].
+#      Bottom edge: +Z line force; top edge: -Z line force.
+#      The balanced loads are integrated on quadratic SEG3 edges using
+#      the native FORCE_ARETE operator; no imposed axial shortening.
+# ----------------------------------------------------------------------
+line_force = stress_ref * t
+load = AFFE_CHAR_MECA(MODELE=model, FORCE_ARETE=(
+    _F(GROUP_MA="BOTTOM_EDGE", FZ=+line_force),
+    _F(GROUP_MA="TOP_EDGE", FZ=-line_force),
+))
+
+# ----------------------------------------------------------------------
+# 05 | LA: LINEAR ELASTIC PREBUCKLING STATE
+#      The stress field SIEF_ELGA provides the geometrical stiffness
+#      for the subsequent eigenvalue buckling analysis.
+# ----------------------------------------------------------------------
+la_result = MECA_STATIQUE(MODELE=model, CHAM_MATER=material_field,
+    CARA_ELEM=shell_properties,
+    EXCIT=(_F(CHARGE=supports), _F(CHARGE=load)))
+la_result = CALC_CHAMP(reuse=la_result, RESULTAT=la_result,
+    FORCE=("REAC_NODA",))
+IMPR_RESU(FORMAT="MED", PROC0="OUI", UNITE=80,
+    RESU=_F(RESULTAT=la_result, NOM_CHAM=("DEPL", "REAC_NODA")))
+reaction_table = POST_RELEVE_T(ACTION=_F(
+    INTITULE="REFERENCE_REACTION", OPERATION="EXTRACTION",
+    RESULTAT=la_result, NOM_CHAM="REAC_NODA",
+    GROUP_NO="REFERENCE_NODE", REPERE="GLOBAL",
+    RESULTANTE=("DZ",)))
+reaction_row = next(iter(reaction_table.EXTR_TABLE()))
+rz = float(reaction_row["DZ"])
+reference_force = 2.0 * math.pi * R * t * stress_ref
+if MPI_RANK == 0:
+    write_csv(workdir / "C02_LA_results.csv",
+        ("Rz_anchor_MN", "reference_axial_force_MN",
+         "D_m", "H_m", "t_m", "reference_stress_MPa"),
+        [(rz, reference_force, D, H, t, stress_ref)])
+print("LA: axial reaction at reference node [MN]:", rz)
+
+# ----------------------------------------------------------------------
+# 06 | LBA: NATIVE ELASTIC AND GEOMETRICAL STIFFNESS
+#      K  = elastic stiffness from RIGI_MECA.
+#      Kg = geometrical stiffness from RIGI_GEOM and SIEF_ELGA.
+#      The positive eigenvalue mu scales the reference load.
+#      Critical stress: sigma_cr = mu * stress_ref.
+# ----------------------------------------------------------------------
+prestress = CREA_CHAMP(TYPE_CHAM="ELGA_SIEF_R", OPERATION="EXTR",
+    RESULTAT=la_result, NOM_CHAM="SIEF_ELGA", NUME_ORDRE=1)
+elastic_element = CALC_MATR_ELEM(OPTION="RIGI_MECA", MODELE=model,
+    CHAM_MATER=material_field, CARA_ELEM=shell_properties, CHARGE=supports)
+geometric_element = CALC_MATR_ELEM(OPTION="RIGI_GEOM", MODELE=model,
+    CARA_ELEM=shell_properties, SIEF_ELGA=prestress)
+dof_numbering = NUME_DDL(MATR_RIGI=elastic_element)
+elastic_stiffness = ASSE_MATRICE(MATR_ELEM=elastic_element,
+    NUME_DDL=dof_numbering)
+geometric_stiffness = ASSE_MATRICE(MATR_ELEM=geometric_element,
+    NUME_DDL=dof_numbering)
+
+# ----------------------------------------------------------------------
+# 07 | POSITIVE EIGENVALUE SEARCH
+#      INFO_MODE with STURM counts eigenvalues in [0, upper].
+#      Expand and, if necessary, narrow the search interval.
+#      CALC_MODES computes the requested buckling modes natively.
+# ----------------------------------------------------------------------
+def count_modes(upper_bound):
+    table = INFO_MODE(TYPE_MODE="MODE_FLAMB",
+        MATR_RIGI=elastic_stiffness,
+        MATR_RIGI_GEOM=geometric_stiffness,
+        CHAR_CRIT=(0.0, float(upper_bound)),
+        COMPTAGE=_F(METHODE="STURM"))
+    values = table.EXTR_TABLE().values()["NB_MODE"]
+    if len(values) != 1:
+        raise RuntimeError("STURM returned an ambiguous eigenvalue count")
+    return int(values[0])
+
+
+upper = 1.0
+for iteration in range(28):
+    found = count_modes(upper)
+    print(f"LBA/STURM: [0,{upper:.8g}] -> {found} modes")
+    if found >= num_modes:
+        break
+    upper *= 2.0
+else:
+    raise RuntimeError("Insufficient positive buckling eigenvalues")
+
+if found > 20:
+    lower = 0.0
+    for iteration in range(35):
+        midpoint = (lower + upper) / 2.0
+        count = count_modes(midpoint)
+        if count < num_modes:
+            lower = midpoint
+        else:
+            upper = midpoint
+            found = count
+        if num_modes <= found <= 20:
+            break
+if found > 20:
+    raise RuntimeError("More than 20 eigenvalues in the selected interval")
+
+buckling_modes = CALC_MODES(TYPE_RESU="MODE_FLAMB",
+    MATR_RIGI=elastic_stiffness,
+    MATR_RIGI_GEOM=geometric_stiffness, OPTION="BANDE",
+    CALC_CHAR_CRIT=_F(CHAR_CRIT=(0.0, upper)),
+    SOLVEUR_MODAL=_F(METHODE="SORENSEN",
+        DIM_SOUS_ESPACE=max(40, 2 * found + 8), NMAX_ITER_SOREN=80),
+    VERI_MODE=_F(STURM="NON", STOP_ERREUR="OUI", SEUIL=1.e-6))
+access = buckling_modes.getAccessParameters(False)
+mode_pairs = sorted(
+    (float(mu), int(order))
+    for mu, order in zip(access["CHAR_CRIT"], access["NUME_ORDRE"])
+    if float(mu) > 0
+)
+if not mode_pairs:
+    raise RuntimeError("No positive buckling modes were returned")
+
+if MPI_RANK == 0:
+    write_csv(workdir / "C02_LBA_results.csv",
+        ("positive_mode", "NUME_ORDRE", "load_factor",
+         "critical_stress_MPa"),
+        [(i, order, mu, mu * stress_ref)
+         for i, (mu, order) in enumerate(mode_pairs, 1)])
+
+IMPR_RESU(FORMAT="MED", PROC0="OUI", UNITE=81,
+    RESU=_F(RESULTAT=buckling_modes, NOM_CHAM="DEPL"))
+if MPI_RANK == 0:
+    write_json(workdir / "C02_metadata.json", {
+        "id": case_data["id"],
+        "D": D, "H": H, "t": t, "E": E, "nu": nu,
+        "reference_stress_MPa": stress_ref,
+        "num_modes": len(mode_pairs),
+        "first_eigenvalue": mode_pairs[0][0],
+        "critical_stress_MPa": mode_pairs[0][0] * stress_ref,
+        "boundary_conditions": "DX=DY=0 at both ends; one bottom DZ=0; free rotations",
+        "loading": "balanced uniform non-follower axial line forces",
+    })
+FIN()
