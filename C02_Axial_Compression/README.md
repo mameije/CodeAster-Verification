@@ -67,21 +67,21 @@ not from a completed Code_Aster analysis.
 
 ## Finite-element model
 
-- Complete cylindrical shell, native \`COQUE_3D\` with \`QUAD9\` elements.
+- Complete cylindrical shell, native `COQUE_3D` with `QUAD9` elements.
 - Radial and circumferential displacements are zero at both end rings:
-  \`DX=DY=0\` on \`BOTTOM_NODES\` and \`TOP_NODES\`.
+  `DX=DY=0` on `BOTTOM_NODES` and `TOP_NODES`.
 - Shell rotations and the remaining axial displacements are free.
-  Only one bottom shell node (\`REFERENCE_NODE\`) has \`DZ=0\` to
+  Only one bottom shell node (`REFERENCE_NODE`) has `DZ=0` to
   suppress rigid axial translation. No rigid diaphragm is introduced.
 - Uniform axial compression is applied by native
-  \`AFFE_CHAR_MECA/FORCE_ARETE\` to auxiliary quadratic \`SEG3\` end
-  boundaries grouped as \`BOTTOM_EDGE\` and \`TOP_EDGE\`.
+  `AFFE_CHAR_MECA/FORCE_ARETE` to auxiliary quadratic `SEG3` end
+  boundaries grouped as `BOTTOM_EDGE` and `TOP_EDGE`.
   The bottom force intensity is \(+\sigma_{\mathrm{ref}}t\) along Z;
   the top intensity is \(-\sigma_{\mathrm{ref}}t\), in MN/m.
 - The two applied end forces balance globally. There is no concentrated
   nodal load at the reference node and no prescribed axial shortening.
-- LA (\`MECA_STATIQUE\`) supplies \`SIEF_ELGA\`. Native
-  \`RIGI_MECA\`, \`RIGI_GEOM\`, \`INFO_MODE\` and \`CALC_MODES\`
+- LA (`MECA_STATIQUE`) supplies `SIEF_ELGA`. Native
+  `RIGI_MECA`, `RIGI_GEOM`, `INFO_MODE` and `CALC_MODES`
   determine positive buckling load factors \(\mu\).
 
 The positive critical stress **magnitude** is
@@ -95,21 +95,21 @@ The case is independent of C01, but uses the same file organization:
 
 | File | Role |
 | --- | --- |
-| \`parameters.json\` | Geometry, elastic material, reference axial stress, mesh sizes and resources |
-| \`generate_mesh.py\` | QUAD9 mesh and two SEG3 end-edge groups |
-| \`C02_LA_LBA.comm\` | Code_Aster model, balanced line loads and native LA/LBA |
-| \`run.py\` | Input preparation, sequential execution, convergence summary and plots |
-| \`write_results.py\` | Administrative CSV/JSON writer |
-| \`results/\` | Local outputs, excluded from version control |
+| `parameters.json` | Geometry, elastic material, reference axial stress, mesh sizes and resources |
+| `generate_mesh.py` | QUAD9 mesh and two SEG3 end-edge groups |
+| `C02_LA_LBA.comm` | Code_Aster model, balanced line loads and native LA/LBA |
+| `run.py` | Input preparation, sequential execution, convergence summary and plots |
+| `write_results.py` | Administrative CSV/JSON writer |
+| `results/` | Local outputs, excluded from version control |
 
-The initial reference stress is \`reference_stress_MPa=1\`.
+The initial reference stress is `reference_stress_MPa=1`.
 The seven nominal sizes are
-\`[0.64, 0.32, 0.16, 0.08, 0.06, 0.04, 0.03]\` m.
-Shell boundary conditions are fixed in the \`.comm\`, not parameterized.
+`[0.64, 0.32, 0.16, 0.08, 0.06, 0.04, 0.03]` m.
+Shell boundary conditions are fixed in the `.comm`, not parameterized.
 
-From this directory with \`aster-mpi\` active:
+From this directory with `aster-mpi` active:
 
-\`\`\`bash
+```bash
 # Pilot: 0.08 m nominal mesh.
 python3 run.py --mesh-index 4
 
@@ -121,27 +121,27 @@ python3 run.py --convergence --prepare-only
 
 # Regenerate both figures without clearing results or running Code_Aster.
 python3 run.py --plots-only
-\`\`\`
+```
 
-Preparation and analysis **clear \`results/\` before execution**.
-The exception is \`--plots-only\`, which reads the existing
-\`results/convergence.csv\` and replaces only the two SVG plots.
+Preparation and analysis **clear `results/` before execution**.
+The exception is `--plots-only`, which reads the existing
+`results/convergence.csv` and replaces only the two SVG plots.
 
-Numerical output includes \`C02_LA_results.csv\` (reference-node reaction
-and nominal total axial load), \`C02_LBA_results.csv\` (eigenvalue and
-\`critical_stress_MPa\`), \`C02_LA.med\`, \`C02_LBA.med\`,
-\`C02_metadata.json\`, and the mesh-specific \`.mess\` file.
+Numerical output includes `C02_LA_results.csv` (reference-node reaction
+and nominal total axial load), `C02_LBA_results.csv` (eigenvalue and
+`critical_stress_MPa`), `C02_LA.med`, `C02_LBA.med`,
+`C02_metadata.json`, and the mesh-specific `.mess` file.
 
-The consolidated \`results/convergence.csv\` contains the first positive
+The consolidated `results/convergence.csv` contains the first positive
 critical stress for each completed mesh. Matplotlib writes
-\`convergence.svg\` (stress vs. actual size) and
-\`convergence_by_elements.svg\` (stress vs. QUAD9 count) with
+`convergence.svg` (stress vs. actual size) and
+`convergence_by_elements.svg` (stress vs. QUAD9 count) with
 Latin Modern Roman typography when available.
 
 ## Required verification
 
 1. Verify the QUAD9 surface and the two loaded SEG3 end boundaries.
-2. Execute the pilot mesh and review the Code_Aster \`.mess\` file.
+2. Execute the pilot mesh and review the Code_Aster `.mess` file.
 3. Check equilibrium and the LA prestress field, expecting
    \(N_x\approx-\sigma_{\mathrm{ref}}t\) away from end effects.
 4. Compare the positive critical stress with **417.290 MPa**
