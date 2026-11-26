@@ -32,7 +32,7 @@ INDEX = REGISTRY / "runs.csv"
 SUMMARY_INDEX = REGISTRY / "run_summary.csv"
 COLUMNS = (
     "run_id", "case_id", "captured_utc", "mesh", "nominal_size_m",
-    "elements", "nodes", "load_factor", "critical_value", "unit",
+    "max_actual_size_m", "elements", "nodes", "load_factor", "critical_value", "unit",
     "reference_value", "difference_pct", "case_status", "note",
 )
 RUN_PATTERN = re.compile(r"^C\d{2}-\d{8}T\d{6}Z-[0-9a-f]{6}$")
