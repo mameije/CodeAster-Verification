@@ -1,4 +1,11 @@
+# Python bytecode and local editor settings
 __pycache__/
 *.pyc
 .vscode/
-C01_Presion_Radial_Fija/resultados/
+
+# Generated numerical output (not version-controlled)
+**/results/
+
+# Legacy output directories from the former Spanish-language layout.
+# Retained temporarily to prevent old untracked solver outputs appearing in Git.
+**/resultados/

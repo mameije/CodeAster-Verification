@@ -1,14 +1,14 @@
 {
-  "descripcion": "C01 | Brush y Almroth, capitulo 5, 5.5a: cilindro completo bajo presion radial fija",
-  "unidades": "MN-m (E en MN/m2, q en MN/m2)",
+  "description": "C01 | Brush and Almroth, section 5.5a: uniform non-follower radial pressure",
+  "units": "MN-m (E and stress/pressure in MN/m^2 = MPa)",
   "D": 1.016,
   "H": 0.508,
   "t": 0.00508,
   "E": 68947.57293168,
   "nu": 0.3,
-  "q_ref": 0.001,
-  "n_modos": 6,
-  "tamano_mallas_m": [
+  "reference_pressure_MPa": 0.001,
+  "num_modes": 6,
+  "mesh_sizes_m": [
     0.64,
     0.32,
     0.16,
@@ -17,7 +17,7 @@
     0.04,
     0.03
   ],
-  "recursos": {
+  "resources": {
     "ncpus": 1,
     "mpi_nbcpu": 1,
     "memory_limit_MB": 2048,
