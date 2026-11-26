@@ -20,14 +20,20 @@ import subprocess
 import sys
 import uuid
 
+from archive_utils import (
+    SUMMARY_COLUMNS, content_fingerprint, is_scientific_file, matching_archive,
+    summary_rows,
+)
+
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "registry"
 ARCHIVE = ROOT / "archive"
 INDEX = REGISTRY / "runs.csv"
+SUMMARY_INDEX = REGISTRY / "run_summary.csv"
 COLUMNS = (
     "run_id", "case_id", "captured_utc", "mesh", "nominal_size_m",
     "elements", "nodes", "load_factor", "critical_value", "unit",
-    "reference_value", "difference_pct", "case_status",
+    "reference_value", "difference_pct", "case_status", "note",
 )
 RUN_PATTERN = re.compile(r"^C\d{2}-\d{8}T\d{6}Z-[0-9a-f]{6}$")
 
@@ -109,6 +115,10 @@ def numerical_rows(case, results):
         rows.append({
             "mesh": mesh_dir.name,
             "nominal_size_m": case_info.get("nominal_size_m", ""),
+            "max_actual_size_m": max(mesh_info["circumferential_size_m"],
+                                     mesh_info["axial_size_m"]) if all(
+                                         k in mesh_info for k in
+                                         ("circumferential_size_m", "axial_size_m")) else "",
             "elements": mesh_info.get("num_elements", ""),
             "nodes": mesh_info.get("num_nodes", ""),
             "load_factor": factor,
@@ -146,7 +156,8 @@ def index_rows():
             for item in manifest["results"]:
                 rows.append({**item, "run_id": manifest["run_id"],
                              "case_id": case_id, "captured_utc": manifest["captured_utc"],
-                             "case_status": manifest["case_status_at_capture"]})
+                             "case_status": manifest["case_status_at_capture"],
+                             "note": manifest.get("note", "")})
     return sorted(rows, key=lambda r: (r["captured_utc"], r["run_id"], r["mesh"]))
 
 
@@ -158,6 +169,14 @@ def write_index(rows):
         writer.writeheader()
         writer.writerows(rows)
     temporary.replace(INDEX)
+    # Regenerate the independent, one-row-per-run navigation index.
+    summaries = summary_rows(ARCHIVE, catalog())
+    summary_temp = SUMMARY_INDEX.with_suffix(".csv.tmp")
+    with summary_temp.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=SUMMARY_COLUMNS)
+        writer.writeheader()
+        writer.writerows(summaries)
+    summary_temp.replace(SUMMARY_INDEX)
 
 
 def capture(case_id, note):
@@ -172,22 +191,30 @@ def capture(case_id, note):
         if not (source / name).is_file() or (source / name).is_symlink():
             raise FileNotFoundError(f"Missing or linked case input: {source / name}")
     rows = numerical_rows(case, results)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    run_id = f"{case_id}-{timestamp}-{uuid.uuid4().hex[:6]}"
+    # Hash relevant contents, not UI caches: allows duplicate detection across v1/v2.
+    source_hashes = {f"inputs/{n}": sha256(source / n) for n in inputs}
+    source_hashes.update({f"results/{p.relative_to(results).as_posix()}": sha256(p)
+                          for p in sorted(results.rglob("*"))
+                          if p.is_file() and is_scientific_file(p.relative_to(results).as_posix())})
     parent = ARCHIVE / case_id
     parent.mkdir(parents=True, exist_ok=True)
+    duplicate_id = matching_archive(parent, source_hashes, file_hashes)
+    if duplicate_id:
+        write_index(index_rows())
+        print(f"ALREADY_ARCHIVED {duplicate_id}: same inputs and numerical files; no copy made")
+        return
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_id = f"{case_id}-{timestamp}-{uuid.uuid4().hex[:6]}"
     staging = parent / f".tmp-{run_id}"
     final = parent / run_id
     if staging.exists() or final.exists():
         raise FileExistsError(f"Run destination already exists: {run_id}")
     try:
-        source_hashes = {f"inputs/{n}": sha256(source / n) for n in inputs}
-        source_hashes.update({f"results/{p.relative_to(results).as_posix()}": sha256(p)
-                              for p in sorted(results.rglob("*")) if p.is_file()})
         (staging / "snapshot" / "inputs").mkdir(parents=True)
         for name in inputs:
             shutil.copy2(source / name, staging / "snapshot" / "inputs" / name)
-        shutil.copytree(results, staging / "snapshot" / "results")
+        shutil.copytree(results, staging / "snapshot" / "results",
+                        ignore=shutil.ignore_patterns("__pycache__", ".vs-code-aster", "*.pyc", "*.pyo"))
         copied_hashes = file_hashes(staging / "snapshot")
         if copied_hashes != source_hashes:
             raise RuntimeError("Inputs or outputs changed during snapshot; archive rejected")
@@ -201,6 +228,7 @@ def capture(case_id, note):
             "python_version": platform.python_version(),
             "code_aster_version": "Not automatically determined",
             "results": rows, "sha256": copied_hashes,
+            "content_fingerprint": content_fingerprint(copied_hashes),
         }
         (staging / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         staging.rename(final)
@@ -252,6 +280,9 @@ def main():
     p.add_argument("--note", default="")
     p = sub.add_parser("list", help="Rebuild and display the local run index")
     p.add_argument("--case", choices=sorted(catalog()))
+    p.add_argument("--details", action="store_true", help="Show all mesh rows instead of one row per run")
+    p = sub.add_parser("duplicates", help="Report identical archived runs; never deletes archives")
+    p.add_argument("--case", choices=sorted(catalog()))
     p = sub.add_parser("restore", help="Recover a checked run outside the benchmark directories")
     p.add_argument("--run", required=True)
     args = parser.parse_args()
@@ -263,13 +294,43 @@ def main():
         capture(args.case, args.note)
     elif args.command == "list":
         rows = index_rows(); write_index(rows)
-        selected = [r for r in rows if not args.case or r["case_id"] == args.case]
+        if args.details:
+            selected = [r for r in rows if not args.case or r["case_id"] == args.case]
+            for r in selected:
+                print(f"{r['run_id']} | {r['mesh']} | {r['critical_value']:.9g} {r['unit']} | "
+                      f"difference={r['difference_pct']:+.4f}% | {r['note']}")
+        else:
+            selected = [r for r in summary_rows(ARCHIVE, catalog())
+                        if not args.case or r["case_id"] == args.case]
+            for r in selected:
+                print(f"{r['run_id']} | {r['mesh_count']} meshes | finest={r['finest_mesh']} | "
+                      f"{r['critical_value']:.9g} {r['unit']} | {r['note']}")
         if not selected:
             print("No archived numerical runs yet")
-        for r in selected:
-            print(f"{r['run_id']} | {r['mesh']} | {r['critical_value']:.9g} {r['unit']} | "
-                  f"difference={r['difference_pct']:+.4f}%")
-        print(f"Index refreshed: {INDEX}")
+        print(f"Indices refreshed: {INDEX} and {SUMMARY_INDEX}")
+    elif args.command == "duplicates":
+        found = False
+        for case_id in sorted(catalog()):
+            if args.case and args.case != case_id:
+                continue
+            folder = ARCHIVE / case_id
+            if not folder.is_dir():
+                continue
+            groups = {}
+            for run_folder in sorted(folder.iterdir()):
+                manifest_file = run_folder / "manifest.json"
+                if run_folder.is_symlink() or not run_folder.is_dir() or not manifest_file.is_file():
+                    continue
+                manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+                fingerprint = content_fingerprint(manifest["sha256"])
+                groups.setdefault(fingerprint, []).append(run_folder.name)
+            for run_ids in groups.values():
+                if len(run_ids) > 1:
+                    found = True
+                    print(f"{case_id} | identical snapshots: {', '.join(run_ids)}")
+        if not found:
+            print("No duplicate snapshot fingerprints found")
+        print("No archives were deleted")
     elif args.command == "restore":
         restore(args.run)
 
