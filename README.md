@@ -26,7 +26,7 @@ evaluated discrete analytical prediction from Brush and Almroth (1975).
 
 | Case | Loading | Code_Aster, M05 | Analytical reference | Difference | Review status |
 | --- | --- | ---: | ---: | ---: | --- |
-| [C01 — Radial pressure](Shells/C01_Radial_Pressure/README.md) | Uniform **non-follower** external radial pressure | 729.098 kPa | 730.641 kPa | −0.211% | **Benchmarked** |
+| [C01 — Radial pressure](Shells/C01_Radial_Pressure/README.md) | Uniform external radial pressure | 729.098 kPa | 730.641 kPa | −0.211% | **Benchmarked** |
 | [C02 — Axial compression](Shells/C02_Axial_Compression/README.md) | Uniform axial compression | 403.303 MPa | 417.354 MPa | −3.367% | **Benchmarked** |
 
 The full **M01–M05 convergence tables**, reference equations, run IDs
