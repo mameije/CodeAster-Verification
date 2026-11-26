@@ -77,7 +77,9 @@ python3 ejecutar.py --convergencia
 
 Si `run_aster` tiene otra ruta, se puede pasar `--aster /ruta/a/run_aster`.
 
-Cada malla genera `resultados/M01`, `M02`, ... con `cilindro.mail`, `caso.json`, `.comm`, `.export` y salidas. Las salidas de otras mallas no se sobrescriben. El CSV `resultados/convergencia.csv` contiene el primer factor critico positivo, la primera carga critica y la variacion respecto de la malla anterior; con Matplotlib, se escribe `convergencia.svg`.
+**Limpieza automatica:** al iniciar cualquiera de los comandos anteriores, el ejecutor elimina por completo la carpeta `resultados/` de C01 y la vuelve a crear vacia. Esto incluye mallas M01, M02, archivos `.med`, `.mess`, CSV y graficos previos. `--solo-preparar` tambien limpia `resultados/`. No se modifica `parametros.json`, el `.comm` original ni otros directorios del proyecto. El programa comprueba primero el rango de indices y, cuando se va a ejecutar Aster, que exista `run_aster`. Por seguridad, se rechaza una carpeta `resultados` que sea un enlace simbolico. **No ejecutar dos instancias a la vez**, ya que una podria borrar los resultados de la otra.
+
+Cada malla seleccionada genera su carpeta `resultados/M01`, `M02`, ... con `cilindro.mail`, `caso.json`, `.comm`, `.export` y salidas. El CSV `resultados/convergencia.csv` contiene el primer factor critico positivo, la primera carga critica y la variacion respecto de la malla anterior; con Matplotlib, se escribe `convergencia.svg`. Si se ejecuta `--indice 1` solo se crea `M01`; para conservar varios resultados en una misma ejecucion, usar `--convergencia`.
 
 **No se ejecutan multiples geometrias, imperfecciones ni campanas**. El alumno cambia un parametro del JSON y repite manualmente si quiere. Al modificar la geometria, volver a generar los casos anteriores de la carpeta `resultados` si se desean comparaciones consistentes: `--convergencia` vuelve a preparar y ejecutar todas las mallas seleccionadas.
 
