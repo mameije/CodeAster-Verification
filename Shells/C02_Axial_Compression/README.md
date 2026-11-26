@@ -4,7 +4,7 @@
 **Code and documentation development:** Mariano P. Ameijeiras, with assistance from ChatGPT (OpenAI).  
 **Institution:** Universidad Nacional de Córdoba, Argentina.  
 **Reference environment:** Code_Aster 18.1.8, Ubuntu 22.04.5 LTS (WSL 2), Python 3.11.17.  
-**Documentation:** [Installation](../INSTALLATION.md) · [Verification status](../VERIFICATION_CASES.md).  
+**Documentation:** [Installation](../../INSTALLATION.md) · [Verification status](../../VERIFICATION_CASES.md).  
 **Last reviewed:** 26 November 2026.
 
 **Status: implementation prepared; no Code_Aster execution or verification completed for C02 yet.**

@@ -27,8 +27,8 @@ It is not a certification of Code_Aster for arbitrary structural problems.
 
 | Case | Mechanical problem | Independent reference | Available evidence | Status |
 | --- | --- | --- | --- | --- |
-| [C01](C01_Radial_Pressure/README.md) | Cylindrical shell, uniform non-follower radial pressure, LA/LBA, COQUE_3D/QUAD9 | Brush and Almroth (1975), §5.5a | Critical pressure, mode shape, mesh-refinement plots | **Benchmarked** |
-| [C02](C02_Axial_Compression/README.md) | Cylindrical shell, uniform axial compression, LA/LBA, COQUE_3D/QUAD9 | Brush and Almroth (1975), §5.5b | Analytical predictions documented; numerical run pending | **Prepared** |
+| [C01](Shells/C01_Radial_Pressure/README.md) | Cylindrical shell, uniform non-follower radial pressure, LA/LBA, COQUE_3D/QUAD9 | Brush and Almroth (1975), §5.5a | Critical pressure, mode shape, mesh-refinement plots | **Benchmarked** |
+| [C02](Shells/C02_Axial_Compression/README.md) | Cylindrical shell, uniform axial compression, LA/LBA, COQUE_3D/QUAD9 | Brush and Almroth (1975), §5.5b | Analytical predictions documented; numerical run pending | **Prepared** |
 
 ## C01 — Uniform non-follower radial pressure
 

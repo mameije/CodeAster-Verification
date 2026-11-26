@@ -124,11 +124,11 @@ cd CodeAster-Verification
 code .
 ```
 
-For example, from the `C01_Radial_Pressure` directory:
+For example, from the `Shells/C01_Radial_Pressure` directory:
 
 ```bash
 micromamba activate aster-mpi
-cd C01_Radial_Pressure
+cd Shells/C01_Radial_Pressure
 python3 run.py --mesh-index 4
 python3 run.py --convergence
 python3 run.py --plots-only

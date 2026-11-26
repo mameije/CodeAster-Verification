@@ -4,7 +4,7 @@
 **Code and documentation development:** Mariano P. Ameijeiras, with assistance from ChatGPT (OpenAI).  
 **Institution:** Universidad Nacional de Córdoba, Argentina.  
 **Reference environment:** Code_Aster 18.1.8, Ubuntu 22.04.5 LTS (WSL 2), Python 3.11.17.  
-**Documentation:** [Installation](../INSTALLATION.md) · [Verification status](../VERIFICATION_CASES.md).  
+**Documentation:** [Installation](../../INSTALLATION.md) · [Verification status](../../VERIFICATION_CASES.md).  
 **Last reviewed:** 26 November 2026.
 
 **Status: benchmark comparison completed; formal verification pending a documented convergence table and acceptance criteria.**
@@ -75,7 +75,7 @@ value above is a previously reported result, not a new run of `M04`.
 Mesh-refinement trends were also examined through two convergence plots.
 The full numerical convergence table and explicit acceptance tolerances
 remain to be documented; see
-[VERIFICATION_CASES.md](../VERIFICATION_CASES.md).
+[VERIFICATION_CASES.md](../../VERIFICATION_CASES.md).
 
 ## Files and configuration
 
@@ -134,7 +134,7 @@ generates:
 - `results/convergence_by_elements.svg`: pressure vs. QUAD9 element count.
 
 Figures use Latin Modern Roman when installed, with editable SVG text.
-See [INSTALLATION.md](../INSTALLATION.md) for WSL, Code_Aster, Matplotlib
+See [INSTALLATION.md](../../INSTALLATION.md) for WSL, Code_Aster, Matplotlib
 and font setup.
 
 ## Verification checks

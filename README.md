@@ -38,12 +38,18 @@ Code_Aster input (`.comm`), and reproducible execution instructions.
 - [VERIFICATION_CASES.md](VERIFICATION_CASES.md): independent references,
   numerical comparisons, evidence and verification status.
 
+## Structural families
+
+- [Columns](Columns/README.md): reserved for future column buckling verification cases.
+- [Plates](Plates/README.md): reserved for future plate buckling verification cases.
+- [Shells](Shells/README.md): cylindrical-shell verification cases, currently C01 and C02.
+
 ## Verification cases
 
 | Case | Problem | Analysis | Status |
 | --- | --- | --- | --- |
-| [C01 — Radial pressure](C01_Radial_Pressure/README.md) | Circular cylindrical shell under uniform non-follower radial pressure | LA/LBA and mesh convergence | Benchmarked; formal closure pending |
-| [C02 — Axial compression](C02_Axial_Compression/README.md) | Circular cylindrical shell under uniformly distributed axial compression | LA/LBA and mesh convergence | Prepared; numerical testing pending |
+| [C01 — Radial pressure](Shells/C01_Radial_Pressure/README.md) | Circular cylindrical shell under uniform non-follower radial pressure | LA/LBA and mesh convergence | Benchmarked; formal closure pending |
+| [C02 — Axial compression](Shells/C02_Axial_Compression/README.md) | Circular cylindrical shell under uniformly distributed axial compression | LA/LBA and mesh convergence | Prepared; numerical testing pending |
 
 Both cases use the native **COQUE_3D** shell formulation with **QUAD9**
 elements. Mesh refinement is controlled by an arbitrary list of element
