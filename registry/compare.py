@@ -23,7 +23,7 @@ ARCHIVE = ROOT / "archive"
 MODEL_FILE = REGISTRY / "theory" / "models.json"
 COMPARISONS = ARCHIVE / "comparisons"
 INDEX = REGISTRY / "comparisons.csv"
-ID_PATTERN = re.compile(r"^C\\d{2}-\\d{8}T\\d{6}Z-[0-9a-f]{6}$")
+ID_PATTERN = re.compile(r"^C\d{2}-\d{8}T\d{6}Z-[0-9a-f]{6}$")
 FIELDS = (
     "run_id", "case_id", "mesh", "nominal_size_m", "elements", "nodes",
     "numerical_value", "theoretical_value", "unit", "difference_pct",
@@ -97,7 +97,7 @@ def analyse_run(run_folder, cases, models):
     rows = []
     for numerical in manifest["results"]:
         mesh = numerical["mesh"]
-        if not re.fullmatch(r"M\\d{2}", mesh):
+        if not re.fullmatch(r"M\d{2}", mesh):
             raise ValueError(f"Invalid mesh identifier: {mesh}")
         params = parameters_for_mesh(snapshot, manifest, mesh)
         theory = discrete_minimum(case_id, params, model["search_limits"])
