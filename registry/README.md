@@ -60,3 +60,24 @@ For scientific review, validate the mechanical assumptions, prestress state, eig
 - The run-summary index displays the *finest available mesh* by actual mesh size when recorded, and otherwise by nominal size for historical archives. It is only a quick navigation view.
 - To run the administrative regression tests: `python3 -m unittest discover -s registry -p 'test_*.py'`.
 - A separate backup strategy is necessary to make archived runs recoverable after disk loss.
+
+## Numerical/theoretical comparisons (Brush and Almroth 1975)
+
+This optional, separate administrative script compares **already archived** C01/C02 runs with the discrete analytical equations from [theory/README.md](theory/README.md). It does **not** execute Code_Aster, alter student examples, or change the archived solver results.
+
+From the `Verification` repository root:
+
+```bash
+python3 registry/compare.py --case C02   # All archived C02 runs
+python3 registry/compare.py --case C01   # All archived C01 runs
+python3 registry/compare.py --all        # All archived C01/C02 runs
+python3 registry/compare.py --run C02-YYYYMMDDTHHMMSSZ-abcdef
+```
+
+The final line illustrates the identifier format: replace it with an existing run ID. The calculation reads the **archived per-mesh `case.json`** when available (otherwise the archived `parameters.json`), and the original LBA result CSV. It checks their SHA-256 fingerprints against the archive manifest before using their contents. No current-case parameter files are consulted.
+
+Generated files (ignored by Git): `registry/comparisons.csv` (all comparisons generated so far) and, for every processed run, `archive/comparisons/<run_id>/comparison.csv`, `report.md`, and `comparison.svg` (SVG only when Matplotlib is available). Reports can be regenerated after changes to theoretical equations or search limits. Existing snapshots are never overwritten.
+
+The relative differences use the **evaluated theoretical equation**, not the historical rounded constant in `cases.json`. Wave numbers refer to the theoretical search only; FE eigenmodes are not classified automatically. The finite integer bounds are configurable in `registry/theory/models.json`. None of these outputs changes the scientific review status or constitutes automatic acceptance.
+
+Run the standard-library test suite with `python3 -m unittest discover -s registry -p 'test_*.py'`.
