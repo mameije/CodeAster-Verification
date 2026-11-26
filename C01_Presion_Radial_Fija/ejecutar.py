@@ -5,7 +5,9 @@ python3 ejecutar.py --solo-preparar
 python3 ejecutar.py --indice 1
 python3 ejecutar.py --convergencia
 
-Cada malla se procesa secuencialmente en una carpeta independiente.
+Cada invocacion limpia resultados/ (incluyendo Mnn y el consolidado) antes
+de preparar las mallas solicitadas. Se pierden resultados previos de C01.
+Cada malla nueva se procesa secuencialmente en una carpeta independiente.
 """
 from __future__ import annotations
 import argparse
@@ -19,6 +21,31 @@ import subprocess
 from generar_malla import generar_malla
 
 RAIZ = Path(__file__).resolve().parent
+RESULTADOS = RAIZ / 'resultados'
+
+
+def limpiar_resultados():
+    """Inicia C01 desde cero: elimina solo la carpeta local resultados/.
+
+    Se rechazan enlaces simbolicos para no borrar carpetas externas.
+    El codigo y parametros.json quedan fuera de esta carpeta.
+    """
+    if RESULTADOS.is_symlink():
+        raise RuntimeError('Por seguridad, resultados/ no puede ser un enlace simbolico')
+    if RESULTADOS.exists():
+        if not RESULTADOS.is_dir():
+            raise RuntimeError('resultados/ existe pero no es una carpeta')
+        shutil.rmtree(RESULTADOS)
+        print(f'LIMPIEZA: resultados anteriores eliminados de {RESULTADOS}', flush=True)
+    RESULTADOS.mkdir(parents=True, exist_ok=True)
+
+
+def verificar_aster(aster):
+    """Verifica que el ejecutable existe ANTES de borrar resultados anteriores."""
+    exe = shutil.which(aster) or (aster if Path(aster).is_file() else None)
+    if exe is None:
+        raise FileNotFoundError(f'No se encontro {aster}. Activar entorno aster-mpi')
+    return exe
 
 
 def configuracion():
@@ -47,7 +74,7 @@ def configuracion():
 
 def preparar(i, p):
     h=p['tamano_mallas_m'][i-1]
-    directorio=RAIZ/'resultados'/f'M{i:02d}'
+    directorio=RESULTADOS/f'M{i:02d}'
     directorio.mkdir(parents=True,exist_ok=True)
     meta=generar_malla(directorio/'cilindro.mail',p['D'],p['H'],h)
     datos={k:p[k] for k in ('D','H','t','E','nu','q_ref','n_modos')}
@@ -73,8 +100,7 @@ def preparar(i, p):
 
 
 def ejecutar(directorio, aster):
-    exe=shutil.which(aster) or (aster if Path(aster).is_file() else None)
-    if exe is None: raise FileNotFoundError(f'No se encontro {aster}. Activar entorno aster-mpi')
+    exe=verificar_aster(aster)
     log=directorio/'C01_LA_LBA.log'
     with log.open('w',encoding='utf-8') as fh:
         ret=subprocess.run([exe,'C01_LA_LBA.export'],cwd=directorio,
@@ -89,7 +115,7 @@ def ejecutar(directorio, aster):
 def resumen(indices, p):
     rows=[]
     for i in indices:
-        carpeta=RAIZ/'resultados'/f'M{i:02d}'
+        carpeta=RESULTADOS/f'M{i:02d}'
         csv_path=carpeta/'C01_LBA_resultados.csv'
         if not csv_path.is_file(): continue
         with csv_path.open(newline='',encoding='utf-8') as fh:
@@ -109,7 +135,7 @@ def resumen(indices, p):
         r0,r1=rows[i-1],rows[i]
         r1['variacion_con_malla_previa_pct']=100*abs(r1['q_crit_kPa']-r0['q_crit_kPa'])/abs(r1['q_crit_kPa'])
     if rows:
-        out=RAIZ/'resultados'/'convergencia.csv'
+        out=RESULTADOS/'convergencia.csv'
         with out.open('w',newline='',encoding='utf-8') as fh:
             w=csv.DictWriter(fh,fieldnames=list(rows[0]))
             w.writeheader();w.writerows(rows)
@@ -127,7 +153,7 @@ def resumen(indices, p):
                 ax.set_title('C01 - Sensibilidad de malla')
                 ax.grid(True)
                 fig.tight_layout()
-                fig.savefig(RAIZ/'resultados'/'convergencia.svg')
+                fig.savefig(RESULTADOS/'convergencia.svg')
                 plt.close(fig)
             except ImportError:
                 print('Matplotlib no disponible; se conserva el CSV')
@@ -147,6 +173,11 @@ def main():
     indices=list(range(1,n+1)) if args.convergencia else [args.indice or 1]
     if any(i<1 or i>n for i in indices):
         ap.error(f'Indice fuera de rango: 1..{n}')
+    # La preparacion tambien limpia. Sin '--solo-preparar', comprobar primero
+    # que Aster existe, para no perder resultados por falta de ejecutable.
+    if not args.solo_preparar:
+        verificar_aster(args.aster)
+    limpiar_resultados()
     for i in indices:
         dir=preparar(i,p)
         if not args.solo_preparar: ejecutar(dir,args.aster)
