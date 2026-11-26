@@ -1,0 +1,26 @@
+{
+  "description": "C01 | Brush and Almroth, section 5.5a: uniform non-follower radial pressure",
+  "units": "MN-m (E and stress/pressure in MN/m^2 = MPa)",
+  "D": 1.016,
+  "H": 0.508,
+  "t": 0.00508,
+  "E": 68947.57293168,
+  "nu": 0.3,
+  "reference_pressure_MPa": 0.001,
+  "num_modes": 6,
+  "mesh_sizes_m": [
+    0.64,
+    0.32,
+    0.16,
+    0.08,
+    0.06,
+    0.04,
+    0.03
+  ],
+  "resources": {
+    "ncpus": 1,
+    "mpi_nbcpu": 1,
+    "memory_limit_MB": 2048,
+    "time_limit_s": 3600
+  }
+}
