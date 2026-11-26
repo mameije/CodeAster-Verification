@@ -18,3 +18,7 @@ __pycache__/
 # Generated one-row-per-run navigation table
 /registry/run_summary.csv
 /registry/run_summary.csv.tmp
+
+# Derived theoretical/numerical comparison index
+/registry/comparisons.csv
+/registry/comparisons.csv.tmp
