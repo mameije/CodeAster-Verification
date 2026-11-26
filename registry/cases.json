@@ -5,7 +5,7 @@
       "id": "C01",
       "family": "Shells",
       "path": "Shells/C01_Radial_Pressure",
-      "title": "Uniform non-follower radial pressure",
+      "title": "Uniform radial pressure",
       "analyses": [
         "LA",
         "LBA"
