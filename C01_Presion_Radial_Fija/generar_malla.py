@@ -55,6 +55,9 @@ def generar_malla(destino: Path, D: float, H: float, h: float) -> dict:
         for nombre, jj in [('BORDE_INF', 0), ('BORDE_SUP', nh)]:
             f.write(f'GROUP_NO NOM={nombre}\n')
             grupo(f, [nodo(i,jj) for i in range(nt)])
+        # Un nodo real del perimetro inferior: elimina traslacion rigida axial.
+        f.write('GROUP_NO NOM=NODO_REF\n')
+        grupo(f, [nodo(0, 0)])
         f.write('FIN\n')
     return {
         'n_elementos': nc * nz, 'n_nodos': nt * (nh + 1),
