@@ -19,34 +19,34 @@ or a guarantee of compatibility with other builds.
 | Windows Subsystem for Linux | WSL 2 | Linux virtualized environment |
 | Linux distribution | Ubuntu 22.04.5 LTS | Reference shell environment |
 | Code_Aster | 18.1.8 | Installed through Micromamba |
-| Python | 3.11.17 | Recorded version in the \`aster-mpi\` environment |
+| Python | 3.11.17 | Recorded version in the `aster-mpi` environment |
 | Matplotlib | 3.11.2 (reported; verify) | Optional plotting dependency |
 | Micromamba | To be confirmed | Environment manager |
 | Visual Studio Code | To be confirmed | Windows editor connected to WSL |
 | Shell mesh model | COQUE_3D / QUAD9 | Native Code_Aster model |
 
 A Code_Aster version and an MPI-capable build are separate questions:
-the environment name \`aster-mpi\` is not proof that a particular
+the environment name `aster-mpi` is not proof that a particular
 installation has been built with MPI support.
 
 ## 2. Installing WSL and Ubuntu
 
 On **Windows 11**, open an administrator PowerShell terminal and execute:
 
-\`\`\`powershell
+```powershell
 wsl --install -d Ubuntu-22.04
-\`\`\`
+```
 
 Restart Windows if requested and complete the first-run Ubuntu user
 configuration. Inspect the installed distribution and WSL version:
 
-\`\`\`powershell
+```powershell
 wsl --list --verbose
 wsl --version
-\`\`\`
+```
 
 WSL 2 is recommended. The available distributions can be inspected using
-\`wsl --list --online\`.
+`wsl --list --online`.
 
 Official reference: [Microsoft Learn — Install WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
 
@@ -56,13 +56,13 @@ Install [Visual Studio Code](https://code.visualstudio.com/) on Windows and
 the official **WSL** extension. Open an Ubuntu terminal, change to the
 working directory, and execute:
 
-\`\`\`bash
+```bash
 code .
-\`\`\`
+```
 
 A remote VS Code window will open in WSL. In that window, use
 **Python: Select Interpreter** to select the Python executable inside
-the \`aster-mpi\` environment.
+the `aster-mpi` environment.
 
 Official reference: [VS Code — Developing in WSL](https://code.visualstudio.com/docs/remote/wsl).
 
@@ -80,71 +80,71 @@ assume that all available Code_Aster packages are MPI enabled.
 
 With a compatible environment already created:
 
-\`\`\`bash
+```bash
 micromamba activate aster-mpi
 which python3
 which run_aster
 python3 --version
 micromamba list -n aster-mpi code-aster
-\`\`\`
+```
 
-Both \`python3\` and \`run_aster\` should refer to the intended environment.
+Both `python3` and `run_aster` should refer to the intended environment.
 The number of MPI processes per calculation is controlled through
-\`mpi_nbcpu\` in each case's \`parameters.json\`. One MPI process is the
+`mpi_nbcpu` in each case's `parameters.json`. One MPI process is the
 default for these small verification problems.
 
 ## 5. Matplotlib and Latin Modern Roman
 
-Install Matplotlib **inside** the \`aster-mpi\` environment:
+Install Matplotlib **inside** the `aster-mpi` environment:
 
-\`\`\`bash
+```bash
 micromamba install -n aster-mpi -c conda-forge matplotlib
 python3 -c "import matplotlib; print(matplotlib.__version__)"
-\`\`\`
+```
 
 Install the Latin Modern fonts in **Ubuntu**, not in the Python environment:
 
-\`\`\`bash
+```bash
 sudo apt update
 sudo apt install fonts-lmodern
 fc-match "Latin Modern Roman"
-\`\`\`
+```
 
 Latin Modern Roman is preferred in the SVG plots. If it is unavailable,
 Matplotlib uses a serif fallback and reports it. SVG labels are stored as
-editable text (\`svg.fonttype = 'none'\`); the font is not embedded.
+editable text (`svg.fonttype = 'none'`); the font is not embedded.
 
 ## 6. Obtain and execute the repository
 
 After the GitHub repository has been renamed and published:
 
-\`\`\`bash
+```bash
 git clone https://github.com/mameije/CodeAster-Verification.git
 cd CodeAster-Verification
 code .
-\`\`\`
+```
 
-For example, from the \`C01_Radial_Pressure\` directory:
+For example, from the `C01_Radial_Pressure` directory:
 
-\`\`\`bash
+```bash
 micromamba activate aster-mpi
 cd C01_Radial_Pressure
 python3 run.py --mesh-index 4
 python3 run.py --convergence
 python3 run.py --plots-only
-\`\`\`
+```
 
 The example may also be launched with a one-time custom solver path:
-\`python3 run.py --aster /path/to/run_aster --mesh-index 4\`.
+`python3 run.py --aster /path/to/run_aster --mesh-index 4`.
 
-Each case **clears its own \`results/\` directory** when preparing or
-executing a calculation. The \`--plots-only\` option is non-destructive.
+Each case **clears its own `results/` directory** when preparing or
+executing a calculation. The `--plots-only` option is non-destructive.
 
 ## 7. Version and environment inspection
 
 On Ubuntu (WSL):
 
-\`\`\`bash
+```bash
 cat /etc/os-release
 uname -r
 micromamba --version
@@ -155,30 +155,30 @@ python3 --version
 micromamba list -n aster-mpi code-aster
 python3 -c "import matplotlib; print(matplotlib.__version__)"
 code --version
-\`\`\`
+```
 
 On Windows PowerShell:
 
-\`\`\`powershell
+```powershell
 wsl --version
 wsl --list --verbose
-\`\`\`
+```
 
 ## 8. Updating a local clone after the repository rename
 
 If an existing clone still uses the old name, inspect its current remote:
 
-\`\`\`bash
+```bash
 git remote -v
-\`\`\`
+```
 
-After the GitHub rename, update \`origin\` to the new URL:
+After the GitHub rename, update `origin` to the new URL:
 
-\`\`\`bash
+```bash
 git remote set-url origin https://github.com/mameije/CodeAster-Verification.git
 git remote -v
 git pull
-\`\`\`
+```
 
 If desired, rename the local working directory **only after closing VS
 Code terminals using that path**; renaming the directory is independent
