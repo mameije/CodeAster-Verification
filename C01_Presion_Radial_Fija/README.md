@@ -73,11 +73,14 @@ python3 ejecutar.py --convergencia --solo-preparar
 
 # Resolver secuencialmente las N mallas y comparar
 python3 ejecutar.py --convergencia
+
+# Regenerar exclusivamente los dos SVG desde convergencia.csv
+python3 ejecutar.py --solo-figuras
 ```
 
 Si `run_aster` tiene otra ruta, se puede pasar `--aster /ruta/a/run_aster`.
 
-**Limpieza automatica:** al iniciar cualquiera de los comandos anteriores, el ejecutor elimina por completo la carpeta `resultados/` de C01 y la vuelve a crear vacia. Esto incluye mallas M01, M02, archivos `.med`, `.mess`, CSV y graficos previos. `--solo-preparar` tambien limpia `resultados/`. No se modifica `parametros.json`, el `.comm` original ni otros directorios del proyecto. El programa comprueba primero el rango de indices y, cuando se va a ejecutar Aster, que exista `run_aster`. Por seguridad, se rechaza una carpeta `resultados` que sea un enlace simbolico. **No ejecutar dos instancias a la vez**, ya que una podria borrar los resultados de la otra.
+**Limpieza automatica:** los comandos de preparacion o calculo eliminan por completo la carpeta `resultados/` de C01 y la vuelven a crear vacia. **Excepcion: `--solo-figuras` no limpia ni modifica resultados numericos.** Esto incluye mallas M01, M02, archivos `.med`, `.mess`, CSV y graficos previos. `--solo-preparar` tambien limpia `resultados/`. No se modifica `parametros.json`, el `.comm` original ni otros directorios del proyecto. El programa comprueba primero el rango de indices y, cuando se va a ejecutar Aster, que exista `run_aster`. Por seguridad, se rechaza una carpeta `resultados` que sea un enlace simbolico. **No ejecutar dos instancias a la vez**, ya que una podria borrar los resultados de la otra.
 
 Cada malla seleccionada genera su carpeta `resultados/M01`, `M02`, ... con `cilindro.mail`, `caso.json`, `.comm`, `.export` y salidas. El CSV `resultados/convergencia.csv` contiene el primer factor critico positivo, la primera carga critica y la variacion respecto de la malla anterior. Cuando existen al menos dos resultados y Matplotlib esta disponible, se generan dos figuras:
 
@@ -85,6 +88,24 @@ Cada malla seleccionada genera su carpeta `resultados/M01`, `M02`, ... con `cili
 - `resultados/convergencia_por_elementos.svg`: carga critica en funcion del numero total de elementos QUAD9 (`elementos`).
 
 La abscisa de la segunda figura es el numero de elementos, no el numero de nodos. Para `--indice 1` solo se genera `M01`; `--convergencia` prepara y resuelve secuencialmente las N mallas.
+
+### Regeneracion de figuras sin recalcular
+
+```bash
+python3 ejecutar.py --solo-figuras
+```
+
+Esta opcion lee **exclusivamente** `resultados/convergencia.csv` y sobrescribe
+los dos archivos SVG. No lee `parametros.json`, no borra ni reconstruye
+`resultados/`, no genera mallas y **no ejecuta Code_Aster**. Requiere un
+consolidado existente con al menos dos mallas y Matplotlib instalado.
+No se combina con `--indice`, `--convergencia` o `--solo-preparar`.
+
+La tipografia de las figuras es **Latin Modern Roman**, con sustitucion por
+DejaVu Serif si la fuente no se encuentra. Los textos de los SVG permanecen
+editables (`svg.fonttype='none'`), sin incrustacion de fuentes. La instalacion
+de WSL, VS Code, `aster-mpi`, Matplotlib y `fonts-lmodern` se documenta en
+el [README general](../README.md#entorno-de-trabajo-windows-wsl-vs-code-y-code_aster).
 
 **No se ejecutan multiples geometrias, imperfecciones ni campanas.** Las modificaciones de parametros se realizan directamente en `parametros.json`. Cada ejecucion reinicia `resultados/`; `--convergencia` prepara y resuelve todas las mallas indicadas en la configuracion vigente.
 
