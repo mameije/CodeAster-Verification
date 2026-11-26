@@ -1,6 +1,16 @@
-# C01: LBA de cilindro bajo presion radial fija
+# C01: LBA de cilindro bajo presión radial fija
 
-**Estado:** primera ejecucion local LA/LBA de M01 completada; resultado comunicado: 734.883 kPa. Pendientes el analisis modal, el estudio de convergencia ampliado y el contraste cuantitativo de las hipotesis del modelo.
+**Responsable científico y mantenedor:** Mariano P. Ameijeiras  
+**Desarrollo de código y documentación:** Mariano P. Ameijeiras, con asistencia de ChatGPT (OpenAI).  
+**Institución:** Universidad Nacional de Córdoba, Argentina.  
+**Entorno de referencia:** Code_Aster 18.1.8 · Python 3.11.17 · Ubuntu 22.04.5 LTS (WSL 2).  
+**Documentación general:** [Instalación](../INSTALACION.md) · [Registro de verificaciones](../VERIFICACIONES.md).  
+**Última revisión:** 26 de noviembre de 2026.
+
+**Estado:** contraste favorable con Brush en presión crítica y forma modal;
+convergencia de malla observada. Verificación formal pendiente de completar
+la tabla cuantitativa de refinamiento y el criterio de aceptación
+([registro central](../VERIFICACIONES.md)).
 
 ## Dos objetivos
 
@@ -101,11 +111,11 @@ los dos archivos SVG. No lee `parametros.json`, no borra ni reconstruye
 consolidado existente con al menos dos mallas y Matplotlib instalado.
 No se combina con `--indice`, `--convergencia` o `--solo-preparar`.
 
-La tipografia de las figuras es **Latin Modern Roman**, con sustitucion por
+La tipografía de las figuras es **Latin Modern Roman**, con sustitución por
 DejaVu Serif si la fuente no se encuentra. Los textos de los SVG permanecen
-editables (`svg.fonttype='none'`), sin incrustacion de fuentes. La instalacion
-de WSL, VS Code, `aster-mpi`, Matplotlib y `fonts-lmodern` se documenta en
-el [README general](../README.md#entorno-de-trabajo-windows-wsl-vs-code-y-code_aster).
+editables (`svg.fonttype='none'`), sin incrustación de fuentes. La instalación
+de WSL, VS Code, `aster-mpi`, Matplotlib y `fonts-lmodern`, así como sus
+versiones de referencia, se documentan en [INSTALACION.md](../INSTALACION.md).
 
 **No se ejecutan multiples geometrias, imperfecciones ni campanas.** Las modificaciones de parametros se realizan directamente en `parametros.json`. Cada ejecucion reinicia `resultados/`; `--convergencia` prepara y resuelve todas las mallas indicadas en la configuracion vigente.
 
@@ -115,7 +125,7 @@ el [README general](../README.md#entorno-de-trabajo-windows-wsl-vs-code-y-code_a
 2. Evaluar fuerzas y desplazamientos LA; la resultante global ideal de una presion uniforme en cilindro cerrado es cero, sin que ello signifique esfuerzo nulo. Para un estado de membrana alejado de los bordes, `N_theta ≈ -q_ref R` es una comprobacion preliminar; Brush considera una idealizacion de membrana del estado previo, mientras que el FEM puede presentar efectos de borde.
 3. Visualizar en ParaView los modos: revisar ovalizaciones, numeros de ondas y modos proximos. **La convergencia del primer autovalor no garantiza por si sola la correspondencia modal.**
 4. Revisar tiempos, nodos y carga critica conforme se refina la malla. `h_nominal` es un objetivo: la columna `h_real_max_m` indica el tamano geometrico realmente obtenido.
-5. Comparar la presion critica y el patron modal con Brush (ecuacion 5.45; 106 psi, m=1, n=8). Las diferencias deben interpretarse considerando la teoria de Donnell, las condiciones de borde y la formulacion de carga. **La verificacion permanece pendiente** hasta completar el contraste.
+5. Comparar la presion critica y el patron modal con Brush (ecuacion 5.45; 106 psi, m=1, n=8). Las diferencias deben interpretarse considerando la teoria de Donnell, las condiciones de borde y la formulacion de carga. **El cierre formal de la verificación está pendiente** hasta documentar las tolerancias y la tabla completa de convergencia.
 
 ## Documentacion tecnica consultada
 
