@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .vscode/
 C01_Presion_Radial_Fija/resultados/
+C02_Compresion_Axial/resultados/
