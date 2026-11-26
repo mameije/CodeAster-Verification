@@ -1,32 +1,71 @@
-# Verificación de modelos Code_Aster
+# CodeAster-Verification
 
-**Responsable científico y mantenedor:** Mariano P. Ameijeiras  
-**Desarrollo de código y documentación:** Mariano P. Ameijeiras, con asistencia de ChatGPT (OpenAI).  
-**Institución:** Universidad Nacional de Córdoba, Argentina.
+**Scientific lead and maintainer:** Mariano P. Ameijeiras  
+**Code and documentation development:** Mariano P. Ameijeiras, with assistance from ChatGPT (OpenAI).  
+**Institution:** Universidad Nacional de Córdoba, Argentina.
 
-Colección de ejemplos autocontenidos para la **verificación de procedimientos numéricos**
-y su utilización en estudios de estabilidad estructural y docencia de posgrado.
-Los cálculos conservan, cuando corresponde, los comandos nativos de Code_Aster
-empleados en el proyecto Viento, sin depender de dicho repositorio.
+This repository contains self-contained **Code_Aster verification benchmarks**
+for structural stability problems involving columns, plates and shells.
+The examples are suitable for graduate-level study and independent numerical
+comparison by researchers.
 
-## Documentación general
+The repository is designed around native Code_Aster commands, transparent
+mechanical assumptions, and small, readable Python scripts for mesh
+generation and execution. No external simulation campaigns or cluster
+administrators are required.
 
-- [Instalación y entorno de ejecución](INSTALACION.md): Windows 11, WSL 2,
-  Ubuntu 22.04.5 LTS, VS Code y el entorno `aster-mpi` de Code_Aster 18.1.8.
-  Incluye versiones de referencia y comandos para comprobarlas.
-- [Registro de verificaciones](VERIFICACIONES.md): casos estudiados, referencias
-  independientes, resultados contrastados y estado de cada verificación.
+**Repository:** [github.com/mameije/CodeAster-Verification](https://github.com/mameije/CodeAster-Verification)  
+**Reference environment:** Code_Aster 18.1.8 · Ubuntu 22.04.5 LTS (WSL 2) · Python 3.11.17.
 
-## Casos
+## For students and researchers
 
-| Caso | Problema | Análisis | Documentación |
+After the repository has been renamed and made public, it can be cloned using:
+
+\`\`\`bash
+git clone https://github.com/mameije/CodeAster-Verification.git
+cd CodeAster-Verification
+code .
+\`\`\`
+
+Each benchmark contains a reference publication, an explicitly defined
+finite-element model, editable configuration in \`parameters.json\`, native
+Code_Aster input (\`.comm\`), and reproducible execution instructions.
+
+## Documentation
+
+- [INSTALLATION.md](INSTALLATION.md): Windows 11, WSL 2, Ubuntu, VS Code,
+  Micromamba and the Code_Aster MPI environment, with reference versions.
+- [VERIFICATION_CASES.md](VERIFICATION_CASES.md): independent references,
+  numerical comparisons, evidence and verification status.
+
+## Verification cases
+
+| Case | Problem | Analysis | Status |
 | --- | --- | --- | --- |
-| C01 | Cilindro bajo presión radial uniforme no seguidora | LA / LBA y convergencia de malla | [C01](C01_Presion_Radial_Fija/README.md) |
-| C02 | Cilindro bajo compresión axial uniforme | LA / LBA y convergencia de malla | [C02](C02_Compresion_Axial/README.md) |
+| [C01 — Radial pressure](C01_Radial_Pressure/README.md) | Circular cylindrical shell under uniform non-follower radial pressure | LA/LBA and mesh convergence | Benchmarked; formal closure pending |
+| [C02 — Axial compression](C02_Axial_Compression/README.md) | Circular cylindrical shell under uniformly distributed axial compression | LA/LBA and mesh convergence | Prepared; numerical testing pending |
 
-Los parámetros de cada caso se establecen en su archivo `parametros.json`.
-Los resultados numéricos se generan localmente y no se incorporan al repositorio.
-El alcance y estado de cada verificación se documentan en
-[VERIFICACIONES.md](VERIFICACIONES.md) y en el README correspondiente.
+Both cases use the native **COQUE_3D** shell formulation with **QUAD9**
+elements. Mesh refinement is controlled by an arbitrary list of element
+sizes in each case configuration.
 
-**Última revisión de la documentación:** 26 de noviembre de 2026.
+## Organization and conventions
+
+- All source code, file names, comments, terminal messages, CSV columns
+  and documentation are written in English.
+- Standard scientific symbols (\(D,H,t,E,\nu\)) and Code_Aster's native
+  command syntax are retained.
+- Mechanical assumptions and shell boundary conditions are fixed by the
+  selected benchmark, rather than exposed as arbitrary configuration
+  alternatives.
+- Each case has its own \`run.py\`, \`generate_mesh.py\`, \`write_results.py\`,
+  \`parameters.json\`, and native \`.comm\` file.
+- Generated \`results/\` directories are excluded from Git.
+- A case is marked **verified** only when the reference, boundary conditions,
+  numerical evidence, convergence and acceptance criteria are documented.
+
+**Publication note:** A software license must be selected before the
+repository is released for reuse. Public visibility alone does not grant
+permission to redistribute or modify the code.
+
+**Documentation updated:** 26 November 2026.
