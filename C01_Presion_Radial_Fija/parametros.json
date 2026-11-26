@@ -1,0 +1,24 @@
+{
+  "descripcion": "C01 | cilindro completo | presion radial uniforme no seguidora",
+  "unidades": "MN-m (E en MN/m2, q en MN/m2)",
+  "D": 2,
+  "H": 2,
+  "t": 0.01,
+  "E": 200000,
+  "nu": 0.3,
+  "q_ref": 0.001,
+  "n_modos": 6,
+  "apoyo": "BASE_ARTICULADA_SUP_LIBRE",
+  "tamano_mallas_m": [
+    0.3,
+    0.2,
+    0.15,
+    0.1
+  ],
+  "recursos": {
+    "ncpus": 1,
+    "mpi_nbcpu": 1,
+    "memory_limit_MB": 2048,
+    "time_limit_s": 3600
+  }
+}
