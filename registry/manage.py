@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Read-only-to-benchmarks administration of archived Code_Aster verification runs.
 
-Only writes under repository-level archive/ and registry/runs.csv.
+Only writes under repository-level archive/ and the two generated CSV indices.
 Standard-library Python; independent of the classroom benchmark runners.
 """
 from __future__ import annotations
@@ -238,7 +238,7 @@ def capture(case_id, note):
         raise
     write_index(index_rows())
     print(f"CAPTURED {run_id}: {len(rows)} numerical mesh(es); stored at {final}")
-    print(f"Index: {INDEX}")
+    print(f"Indices: {INDEX} and {SUMMARY_INDEX}")
 
 
 def restore(run_id):
