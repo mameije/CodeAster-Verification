@@ -24,6 +24,7 @@ el alcance de la comparación; no constituye una validación general de Code_Ast
 | Caso | Problema y análisis | Referencia independiente | Evidencia disponible | Estado |
 | --- | --- | --- | --- | --- |
 | [C01](C01_Presion_Radial_Fija/README.md) | Cilindro completo, presión radial no seguidora, LA/LBA, COQUE_3D/QUAD9 | Brush y Almroth (1975), cap. 5, §5.5a | Presión crítica, patrón modal y curvas de refinamiento de malla | **Contrastado** |
+| [C02](C02_Compresion_Axial/README.md) | Cilindro completo, compresión axial uniforme, LA/LBA, COQUE_3D/QUAD9 | Brush y Almroth (1975), cap. 5, §5.5b (ecs. 5.50 y 5.52) | Solución teórica calculada; falta ejecutar y contrastar Code_Aster | **En preparación** |
 
 ## C01 — Pandeo de cilindro bajo presión radial fija
 
@@ -61,6 +62,21 @@ verificación general de toda la formulación.
 
 **Entorno de referencia:** Code_Aster 18.1.8, Ubuntu 22.04.5 LTS (WSL 2);
 véase [INSTALACION.md](INSTALACION.md).
+
+## C02 — Pandeo de cilindro bajo compresión axial
+
+**Referencia:** Brush y Almroth (1975), §5.5b, ecuaciones (5.50) y
+(5.52), figuras 5.8 y 5.9.
+
+Para la geometría inicial de C02, la ecuación clásica predice
+`sigma_cr = 417,290 MPa`. La minimización de la ecuación discreta (5.50)
+predice `417,354 MPa` para `m=3`, `n=9`, con otros modos muy cercanos
+en carga crítica.
+
+**Estado:** formulación teórica identificada y archivos de cálculo preparados.
+**Aún no hay un resultado numérico obtenido con Code_Aster para C02.**
+Se requiere verificar la distribución de esfuerzos previos, las tensiones
+críticas, los modos y la convergencia de malla.
 
 ---
 
