@@ -4,9 +4,11 @@
 python3 ejecutar.py --solo-preparar
 python3 ejecutar.py --indice 1
 python3 ejecutar.py --convergencia
+python3 ejecutar.py --solo-figuras
 
-Cada invocacion limpia resultados/ (incluyendo Mnn y el consolidado) antes
-de preparar las mallas solicitadas. Se pierden resultados previos de C01.
+La preparacion y la ejecucion reinician resultados/ antes de calcular.
+La opcion --solo-figuras utiliza convergencia.csv sin modificar los
+resultados numericos ni ejecutar Code_Aster.
 Cada malla nueva se procesa secuencialmente en una carpeta independiente.
 """
 from __future__ import annotations
@@ -141,37 +143,76 @@ def resumen(indices, p):
             w=csv.DictWriter(fh,fieldnames=list(rows[0]))
             w.writeheader();w.writerows(rows)
         print(f'Resumen: {out}',flush=True)
-        if len(rows)>1:
-            try:
-                import matplotlib
-                matplotlib.use('Agg')
-                import matplotlib.pyplot as plt
-                fig,ax=plt.subplots()
-                ax.plot([r['h_real_max_m'] for r in rows],
-                        [r['q_crit_kPa'] for r in rows],'o-')
-                ax.set_xlabel('Tamano real maximo del elemento (m)')
-                ax.set_ylabel('Primera carga critica LBA (kPa)')
-                ax.set_title('C01 - Sensibilidad de malla')
-                ax.grid(True)
-                fig.tight_layout()
-                fig.savefig(RESULTADOS/'convergencia.svg')
-                plt.close(fig)
-
-                # Segunda representacion del mismo conjunto de resultados:
-                # presion critica en funcion del numero de elementos QUAD9.
-                fig,ax=plt.subplots()
-                ax.plot([r['elementos'] for r in rows],
-                        [r['q_crit_kPa'] for r in rows],'o-')
-                ax.set_xlabel('Numero de elementos QUAD9')
-                ax.set_ylabel('Primera carga critica LBA (kPa)')
-                ax.set_title('C01 - Convergencia por numero de elementos')
-                ax.grid(True)
-                fig.tight_layout()
-                fig.savefig(RESULTADOS/'convergencia_por_elementos.svg')
-                plt.close(fig)
-            except ImportError:
-                print('Matplotlib no disponible; se conserva el CSV')
+        generar_figuras(rows)
     return rows
+
+
+def generar_figuras(rows, obligatorio=False):
+    """Genera dos SVG a partir de los datos numericos del consolidado.
+
+    Con obligatorio=False, Matplotlib es opcional en la ejecucion del solver.
+    Con obligatorio=True, su ausencia se informa como error.
+    """
+    if len(rows)<2:
+        if obligatorio:
+            raise ValueError('Se requieren al menos dos mallas para graficar convergencia')
+        return
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        from matplotlib import font_manager
+    except ImportError as exc:
+        if obligatorio:
+            raise RuntimeError('Matplotlib no esta instalado en el Python activo') from exc
+        print('Matplotlib no disponible; se conserva el CSV',flush=True)
+        return
+
+    # Tipografia comun a todas las figuras; SVG conserva texto editable.
+    plt.rcParams['font.family']='serif'
+    plt.rcParams['font.serif']=['Latin Modern Roman','DejaVu Serif']
+    plt.rcParams['svg.fonttype']='none'
+    if not any(f.name=='Latin Modern Roman' for f in font_manager.fontManager.ttflist):
+        print('AVISO: Latin Modern Roman no disponible; se usa fuente sustituta. '
+              'En Ubuntu: sudo apt install fonts-lmodern',flush=True)
+
+    # Los campos provienen de resumen() o del CSV consolidado.
+    h=[float(r['h_real_max_m']) for r in rows]
+    ne=[int(r['elementos']) for r in rows]
+    q=[float(r['q_crit_kPa']) for r in rows]
+
+    fig,ax=plt.subplots()
+    ax.plot(h,q,'o-')
+    ax.set_xlabel('Tamano real maximo del elemento (m)')
+    ax.set_ylabel('Primera carga critica LBA (kPa)')
+    ax.set_title('C01 - Sensibilidad de malla')
+    ax.grid(True)
+    fig.tight_layout()
+    fig.savefig(RESULTADOS/'convergencia.svg')
+    plt.close(fig)
+
+    # Segunda representacion: misma carga critica y numero total de QUAD9.
+    fig,ax=plt.subplots()
+    ax.plot(ne,q,'o-')
+    ax.set_xlabel('Numero de elementos QUAD9')
+    ax.set_ylabel('Primera carga critica LBA (kPa)')
+    ax.set_title('C01 - Convergencia por numero de elementos')
+    ax.grid(True)
+    fig.tight_layout()
+    fig.savefig(RESULTADOS/'convergencia_por_elementos.svg')
+    plt.close(fig)
+    print('Figuras: convergencia.svg y convergencia_por_elementos.svg',flush=True)
+
+
+def solo_figuras():
+    """Reproduce ambos SVG desde el consolidado, sin modificar resultados LA/LBA."""
+    ruta=RESULTADOS/'convergencia.csv'
+    if not ruta.is_file():
+        raise FileNotFoundError(f'No existe {ruta}. Ejecutar --convergencia primero.')
+    with ruta.open(newline='',encoding='utf-8') as fh:
+        rows=list(csv.DictReader(fh))
+    generar_figuras(rows,obligatorio=True)
+
 
 
 def main():
@@ -179,9 +220,15 @@ def main():
     op=ap.add_mutually_exclusive_group()
     op.add_argument('--indice',type=int,default=None,help='Malla de la lista, empezando en 1')
     op.add_argument('--convergencia',action='store_true',help='Ejecutar secuencialmente las N mallas')
+    op.add_argument('--solo-figuras',action='store_true',help='Recrear los dos SVG desde convergencia.csv, sin recalcular')
     ap.add_argument('--solo-preparar',action='store_true')
     ap.add_argument('--aster',default='run_aster')
     args=ap.parse_args()
+    if args.solo_figuras:
+        if args.solo_preparar:
+            ap.error('--solo-figuras es incompatible con --solo-preparar')
+        solo_figuras()
+        return
     p=configuracion()
     n=len(p['tamano_mallas_m'])
     indices=list(range(1,n+1)) if args.convergencia else [args.indice or 1]
