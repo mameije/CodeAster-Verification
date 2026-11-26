@@ -47,9 +47,9 @@ The benchmark cylinder uses \(D=1.016\) m, \(H=0.508\) m,
 | Observed circumferential wave count | \(n=8\) |
 | Analytical and observed longitudinal half-waves | \(m=1\) |
 
-**Mesh numbering:** the 240-element mesh was designated \`M01\` under the
+**Mesh numbering:** the 240-element mesh was designated `M01` under the
 original four-mesh configuration. It corresponds to the current **0.08 m**
-nominal size, designated \`M04\` in the seven-mesh configuration. The value
+nominal size, designated `M04` in the seven-mesh configuration. The value
 above is a historical reported result, not a new run under the new name.
 
 Mesh-refinement plots were produced for critical pressure versus actual
@@ -74,10 +74,10 @@ For the same initial dimensions and material:
 
 Closely spaced axial-shell buckling eigenvalues are expected. The case
 applies balanced non-follower line forces at both ends using the native
-\`FORCE_ARETE\` operator and uses a single axial reference-node restraint
+`FORCE_ARETE` operator and uses a single axial reference-node restraint
 to eliminate rigid translation.
 
-**State:** **Prepared**. The C02 \`.comm\`, Python scripts and reference
+**State:** **Prepared**. The C02 `.comm`, Python scripts and reference
 calculations have not yet been verified through an actual solver run.
 Prebuckling stresses, reactions, eigenvalues, eigenmodes and mesh
 convergence remain to be checked.
