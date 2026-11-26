@@ -7,11 +7,11 @@
 **Documentation:** [Installation](../../INSTALLATION.md) · [Verification status](../../VERIFICATION_CASES.md).  
 **Last reviewed:** 26 November 2026.
 
-**Status: benchmark comparison completed; formal verification pending a documented convergence table and acceptance criteria.**
+**Status: Benchmarked; five-mesh comparison documented; formal verification pending explicit acceptance criteria.**
 
 ## Purpose and reference
 
-This independent case verifies the native LA/LBA workflow of Code_Aster against
+This independent case benchmarks the native LA/LBA workflow of Code_Aster against
 the classical solution for a simply supported circular cylindrical shell under
 uniform, non-follower external radial pressure.
 
@@ -56,26 +56,24 @@ the finite-element model can develop boundary bending effects. Follower-load
 stiffness is not included; follower-pressure benchmark values are therefore
 not automatically equivalent.
 
-## First numerical comparison
+## Numerical comparison and mesh refinement
 
-The **0.08 m nominal mesh (240 QUAD9)** produced:
+The version-controlled [verification register](../../VERIFICATION_CASES.md)
+reports all **five** meshes of archived run
+`C01-20261126T164332Z-b9740e`, with the evaluated Brush Eq. (5.44)
+reference of **730.641 kPa**. The finest mesh (M05, 10,455 QUAD9)
+gives **729.098 kPa**, a relative difference of **−0.211%**.
+M04 and M05 differ by approximately 0.055 kPa.
 
-| Quantity | Result |
-| --- | ---: |
-| Brush critical pressure | 730.84 kPa |
-| Code_Aster critical pressure | 734.883 kPa |
-| Relative difference | +0.553% |
-| Observed eigenmode in ParaView | \(m=1,\ n=8\) |
+An **earlier, separate** 240-QUAD9 calculation, using a nominal
+0.08 m mesh and a rounded reference of 730.84 kPa, gave 734.883 kPa
+(+0.553%). Its eigenmode was observed to have \(m=1,\ n=8\).
+This historical result does **not** correspond to any M01–M05 mesh
+in the current configuration; the numerical modes of the new series
+are not automatically classified by the comparison script.
 
-**Mesh numbering note:** this 240-element calculation was originally named
-`M01` when the input list contained four mesh sizes. The present
-seven-size configuration labels the **0.08 m** mesh `M04`. The numerical
-value above is a previously reported result, not a new run of `M04`.
-
-Mesh-refinement trends were also examined through two convergence plots.
-The full numerical convergence table and explicit acceptance tolerances
-remain to be documented; see
-[VERIFICATION_CASES.md](../../VERIFICATION_CASES.md).
+These figures document a benchmark and numerical mesh-refinement trend,
+not a formal solver-verification acceptance decision.
 
 ## Files and configuration
 
@@ -93,8 +91,8 @@ keys such as `reference_pressure_MPa`, `num_modes`, `mesh_sizes_m`,
 and `resources`. End conditions are fixed to the benchmark and are **not**
 configuration options.
 
-The initial `mesh_sizes_m` list is
-`[0.64, 0.32, 0.16, 0.08, 0.06, 0.04, 0.03]` (metres).
+The current `mesh_sizes_m` list is
+`[0.15, 0.1, 0.05, 0.025, 0.0125]` (metres).
 The actual size follows integer subdivisions of the circumference and height.
 There are at least eight circumferential and two axial QUAD9 elements.
 
@@ -103,7 +101,7 @@ There are at least eight circumferential and two axial QUAD9 elements.
 From this directory in a WSL terminal with `aster-mpi` active:
 
 ```bash
-# Run the 0.08 m mesh (fourth entry in the current list).
+# Run the 0.025 m mesh (fourth entry in the current list).
 python3 run.py --mesh-index 4
 
 # Run every configured mesh sequentially.
