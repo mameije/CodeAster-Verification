@@ -42,9 +42,11 @@ DEBUT()
 DEFI_FICHIER(ACTION="ASSOCIER", UNITE=20,
     FICHIER=str(workdir / "cylinder.mail"), TYPE="ASCII", ACCES="OLD")
 mesh = LIRE_MAILLAGE(FORMAT="ASTER", UNITE=20)
-# The auxiliary SEG3 edges only define load boundaries, not shell elements.
+# COQUE_3D also assigns SEG3 boundary elements (MEBOCQ3) for FORCE_ARETE.
+# They integrate edge forces without introducing extra structural stiffness.
 model = AFFE_MODELE(MAILLAGE=mesh,
-    AFFE=_F(GROUP_MA="SHELL", PHENOMENE="MECANIQUE", MODELISATION="COQUE_3D"))
+    AFFE=_F(GROUP_MA=("SHELL", "BOTTOM_EDGE", "TOP_EDGE"),
+            PHENOMENE="MECANIQUE", MODELISATION="COQUE_3D"))
 shell_properties = AFFE_CARA_ELEM(MODELE=model,
     COQUE=_F(GROUP_MA="SHELL", EPAIS=t, VECTEUR=(0.0, 0.0, 1.0)))
 elastic_material = DEFI_MATERIAU(ELAS=_F(E=E, NU=nu))
