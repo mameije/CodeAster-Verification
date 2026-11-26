@@ -20,5 +20,4 @@ __pycache__/
 /registry/run_summary.csv.tmp
 
 # Derived theoretical/numerical comparison index
-/registry/comparisons.csv
 /registry/comparisons.csv.tmp
