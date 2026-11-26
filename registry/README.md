@@ -36,7 +36,7 @@ python3 registry/manage.py restore --run C01-YYYYMMDDTHHMMSSZ-abcdef
 
 The last line is a **format example**: use a real run ID. Recovery copies the archived inputs and outputs to `archive/recovered/<run_id>/`. It **never overwrites** either the original archive or the active `Shells/C0x_.../results/` directory. If the recovery directory already exists, it stops rather than replacing it. It verifies SHA-256 hashes first and checks the recovered copy again.
 
-Only successful positive LBA result rows from `C01_LBA_results.csv` or `C02_LBA_results.csv` are indexed. The `capture` tool refuses a case with no numerical LBA CSVs (for example, a `--prepare-only` run). Each archived result is a **record**, not an automatically approved verification. Percentage differences compare the calculated critical value with the primary Brush reference; they are **not acceptance decisions** or error bounds.
+Only finite, positive numerical LBA values from `C01_LBA_results.csv` or `C02_LBA_results.csv` are indexed. The script does not independently establish successful solver termination; review the archived `.mess` and execution log. The `capture` tool refuses a case with no numerical LBA CSVs (for example, a `--prepare-only` run). Each archived result is a **record**, not an automatically approved verification. Percentage differences compare the calculated critical value with the primary Brush reference; they are **not acceptance decisions** or error bounds.
 
 ## Retention, reproducibility and review
 
